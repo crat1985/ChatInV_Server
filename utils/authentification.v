@@ -1,8 +1,9 @@
 module utils
 
 import net
+import db.sqlite
 
-pub fn ask_credentials(mut socket &net.TcpConn) (string, string, string) {
+pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, string) {
 	mut data := []u8{len: 1024}
 	mut error := ""
 	socket.write_string("Pseudo : ") or {
@@ -36,9 +37,14 @@ pub fn ask_credentials(mut socket &net.TcpConn) (string, string, string) {
 		return error, "", ""
 	}
 	mut password := data[0..lenght].bytestr()
-	println("Password length : ${password.len}")
 	if pseudo.len < 8 || password.len < 8 {
-		return "Too short !\n", "", ""
+		return "Pseudo or password too short !\n", "", ""
 	}
-	return "", pseudo, password
+
+	account := get_account_by_pseudo(db, pseudo)
+	if password == account.password {
+		return "", pseudo, password
+	}
+
+	return "Wrong password !\n", pseudo, password
 }

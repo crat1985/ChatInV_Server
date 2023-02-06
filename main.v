@@ -25,28 +25,24 @@ fn main() {
 			eprintln(err)
 			continue
 		}
-		socket.set_read_timeout(time.hour)
-		socket.set_write_timeout(time.minute)
+		socket.set_read_timeout(time.infinite)
+		socket.set_write_timeout(2 *time.minute)
 		spawn handle_user(mut socket, mut &sockets, db)
 	}
 }
 
 fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn, db sqlite.DB) {
-	error, pseudo, password := utils.ask_credentials(mut socket, db)
+	error, pseudo, _ := utils.ask_credentials(mut socket, db)
 	if error!="" {
-		println("[LOG] ${socket.addr()!} => '$error'")
+		println("[LOG] ${socket.peer_ip() or {"IPERROR"}} => '$error'")
 		delete_socket_from_sockets(mut sockets, socket)
+		broadcast(mut sockets, "$pseudo left the chat !".bytes(), &net.TcpConn{})
 		return
 	}
 
 	sockets.insert(sockets.len,  socket)
 
-	socket.write_string("Welcome $pseudo !\n") or {
-		eprintln(err)
-		delete_socket_from_sockets(mut sockets, socket)
-		return
-	}
-	println("[LOG] $pseudo logged in with password '$password'")
+	broadcast(mut sockets, "$pseudo joined the chat !".bytes(), &net.TcpConn{})
 	for {
 		mut datas := []u8{len: 1024}
 		length := socket.read(mut datas) or {
@@ -79,5 +75,5 @@ fn broadcast(mut sockets []net.TcpConn, datas []u8, ignore &net.TcpConn) {
 			}
 		}
 	}
-	println("[LOG] New message : ${datas.bytestr()}")
+	println("[LOG] ${datas.bytestr()}")
 }

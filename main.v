@@ -10,6 +10,8 @@ fn main() {
 
 	db := utils.init_database()
 
+	println("Number of accounts : ${utils.get_number_of_accounts(db)}")
+
 	mut server := net.listen_tcp(.ip6, ":8888") or {
 		panic(err)
 	}
@@ -32,8 +34,11 @@ fn main() {
 fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn, db sqlite.DB) {
 	error, pseudo, password := utils.ask_credentials(mut socket, db)
 	if error!="" {
-		socket.write_string(error) or {}
-		delete_socket_from_sockets(mut sockets, socket)
+		socket.write_string(error) or {
+			delete_socket_from_sockets(mut sockets, socket)
+			return
+		}
+		handle_user(socket, sockets, db)
 		return
 	}
 

@@ -17,14 +17,6 @@ pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, s
 		return error, "", ""
 	}
 	mut pseudo := data[0..lenght].bytestr()
-	/*for element in data {
-		if element != 0 {
-			pseudo += element.ascii_str()
-		} else {
-			break
-		}
-	}*/
-	println("Pseudo : $pseudo")
 	socket.write_string("Password : ") or {
 		error = "Error while asking password : $err"
 		eprintln(error)

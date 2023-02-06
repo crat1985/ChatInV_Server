@@ -6,6 +6,7 @@ untitled19
 *.so
 *.dylib
 *.dll
+*.db
 
 # Ignore binary output folders
 bin/
@@ -15,5 +16,3 @@ bin/
 .idea/
 .vscode/
 *.iml
-
-accounts.db

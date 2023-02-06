@@ -9,9 +9,6 @@ fn main() {
 
 	db := utils.init_database()
 
-	//nb_account := utils.get_number_of_accounts(db)
-
-	//println("Number of accounts : $nb_account")
 	mut server := net.listen_tcp(.ip6, ":8888") or {
 		panic(err)
 	}
@@ -39,9 +36,6 @@ fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn) {
 		return
 	}
 
-	println("Pseudo : $pseudo")
-	println("Password : $password")
-
 	sockets.insert(sockets.len,  socket)
 
 	socket.write_string("Welcome !\n") or {
@@ -49,15 +43,15 @@ fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn) {
 		delete_socket_from_sockets(mut sockets, socket)
 		return
 	}
-	mut datas := []u8{len: 1024}
 	for {
-		socket.read(mut datas) or {
+		mut datas := []u8{len: 1024}
+		length := socket.read(mut datas) or {
 			eprintln("[ERROR] "+err.str())
 			delete_socket_from_sockets(mut sockets, socket)
 			//sockets = sockets.filter( it!=client )
 			break
 		}
-		broadcast(mut sockets, datas, socket)
+		broadcast(mut sockets, datas[0..length], socket)
 	}
 }
 
@@ -81,5 +75,5 @@ fn broadcast(mut sockets []net.TcpConn, datas []u8, ignore &net.TcpConn) {
 			}
 		}
 	}
-	println(" ${datas.bytestr()}")
+	println("[LOG] New message : ${datas.bytestr()}")
 }

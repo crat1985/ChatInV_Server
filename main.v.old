@@ -1,0 +1,159 @@
+module main
+
+import db.sqlite
+import net
+
+[table: 'account']
+struct Account {
+	id int [primary; sql: serial]
+	pseudo string [nonnull]
+	password string [nonnull]
+}
+
+/*struct App {
+	vweb.Context
+}
+
+struct Object {
+	title       string
+	description string
+}*/
+
+fn main() {
+	mut sockets := []&net.TcpConn{}
+
+	db := sqlite.connect("accounts.db") or {
+		panic(err)
+	}
+
+	sql db {
+		create table Account
+	}
+
+	nb_account := get_number_of_accounts(db)
+
+	println("Number of accounts : $nb_account")
+
+	/*account_1 := Account{
+		pseudo: 'Riccardo'
+		password: 'ceciestuntest'
+	}
+
+	insert_account(db, account_1)
+
+	all_accounts := get_all_accounts(db)
+
+	println(all_accounts)
+	println(all_accounts.len)
+
+	account := get_account_by_pseudo(db, "Riccardo")
+	println(account)*/
+
+	//vweb.run_at(new_app(), vweb.RunParams{port: 8888}) or {panic(err)}
+
+	mut socket := net.listen_tcp(.ip6, ":8888") or {
+		panic(err)
+	}
+
+	for {
+		mut client := socket.accept() or {
+			eprintln(err)
+			continue
+		}
+		spawn handle_user(mut client, mut &sockets)
+	}
+}
+
+fn handle_user(mut client &net.TcpConn, mut sockets []&net.TcpConn) {
+	println("Avant connexion : $sockets")
+	sockets.insert(if sockets.len == 0 {0} else {sockets.len-1}, client)
+	println("Après connexion : $sockets")
+	client.write_string("Welcome !") or {
+		eprintln(err)
+		return
+	}
+	mut datas := []u8{len: 1024}
+	for {
+		client.read(mut datas) or {
+			eprintln("[ERROR] "+err.str())
+			sockets = sockets.filter( it!=client )
+			println("Après supression : $sockets")
+			break
+		}
+		println(datas.bytestr())
+	}
+}
+
+/*fn new_app() &App {
+	mut app := &App{}
+	//app.mount_static_folder_at(os.resource_abs_path('/home/riccardo/V_orm/FirstProject/public'), '/')
+	app.mount_static_folder_at(os.resource_abs_path('.'), '/')
+	return app
+}*/
+
+fn get_all_accounts(db sqlite.DB) []Account {
+	accounts := sql db {
+		select from Account
+	}
+	return accounts
+}
+
+fn account_exists(db sqlite.DB, pseudo string) bool {
+	account := get_account_by_pseudo(db, pseudo)
+	if account.id == 0 {
+		return false
+	}
+	return true
+}
+
+fn get_account_by_pseudo(db sqlite.DB, pseudo string) Account {
+	return sql db {
+		select from Account where pseudo == pseudo limit 1
+	}
+}
+
+fn insert_account(db sqlite.DB, account Account) {
+	if account_exists(db, account.pseudo) {
+		println("ALREADY EXISTS")
+		return
+	}
+	sql db {
+		insert account into Account
+	}
+}
+
+fn delete_account(db sqlite.DB, account Account) {
+	sql db {
+		delete from Account where pseudo == account.pseudo
+	}
+}
+
+fn get_number_of_accounts(db sqlite.DB) int {
+	return sql db {
+		select count from Account
+	}
+}
+
+/*["/"]
+fn (mut app App) index() vweb.Result {
+	page_title := "Page title"
+	v_url := 'https://github.com/vlang/v'
+	list_of_object := [
+		Object{
+			title: 'One good title'
+			description: 'this is the first'
+		},
+		Object{
+			title: 'Other good title'
+			description: 'more one'
+		},
+	]
+
+	return $vweb.html()
+}
+
+
+fn (mut app App) ip() vweb.Result {
+	ip := app.ip()
+	return app.text("$ip")
+}*/

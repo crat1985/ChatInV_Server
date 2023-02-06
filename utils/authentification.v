@@ -1,29 +1,28 @@
 module utils
 
-import net
 import db.sqlite
 
-pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, string) {
+pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 	for {
 		mut data := []u8{len: 1024}
-		socket.write_string("Pseudo : ") or {
+		user.write_string("Pseudo : ") or {
 			return "Error while asking pseudo : $err", "", ""
 		}
-		mut lenght := socket.read(mut data) or {
+		mut lenght := user.read(mut data) or {
 			return "Error while reading pseudo : $err", "", ""
 		}
 		mut pseudo := data[0..lenght].bytestr()
-		socket.write_string("Password : ") or {
+		user.write_string("Password : ") or {
 			return "Error while asking password : $err", "", ""
 		}
 		data = []u8{len: 1024}
-		lenght = socket.read(mut data) or {
+		lenght = user.read(mut data) or {
 			return "Error while reading password : $err", "", ""
 		}
 		mut password := data[0..lenght].bytestr()
 		if pseudo.len < 8 || password.len < 8 {
-			println("[LOG] ${socket.peer_ip() or {"IPERROR"}} => 'Pseudo or password too short !'")
-			socket.write_string("Pseudo or password too short !\n") or {
+			println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Pseudo or password too short !'")
+			user.write_string("Pseudo or password too short !\n") or {
 				return "Error while writing too short error : $err", "", ""
 			}
 			continue
@@ -34,9 +33,9 @@ pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, s
 			return "", pseudo, password
 		}
 
-		println("[LOG] ${socket.peer_ip() or {"IPERROR"}} => 'Wrong password !'")
-		socket.write_string("Wrong password !\n") or {
-			return "Error while sending 'Wrong password' to ${socket.peer_ip() or {"IPERROR"}}", "", ""
+		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")
+		user.write_string("Wrong password !\n") or {
+			return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", "", ""
 		}
 	}
 

@@ -6,7 +6,7 @@ import time
 import db.sqlite
 
 fn main() {
-	mut sockets := []net.TcpConn{}
+	mut users := []utils.User{}
 
 	db := utils.init_database()
 
@@ -27,35 +27,44 @@ fn main() {
 		}
 		socket.set_read_timeout(time.infinite)
 		socket.set_write_timeout(2 *time.minute)
-		spawn handle_user(mut socket, mut &sockets, db)
+		mut user := utils.User{socket, ""}
+		spawn handle_user(mut &user, mut &users, db)
 	}
 }
 
-fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn, db sqlite.DB) {
-	error, pseudo, _ := utils.ask_credentials(mut socket, db)
+fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
+	error, pseudo, _ := utils.ask_credentials(mut user, db)
 	if error!="" {
-		println("[LOG] ${socket.peer_ip() or {"IPERROR"}} => '$error'")
-		delete_socket_from_sockets(mut sockets, socket)
-		broadcast(mut sockets, "$pseudo left the chat !".bytes(), &net.TcpConn{})
+		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
+		disconnected(mut users, user)
 		return
 	}
 
-	sockets.insert(sockets.len,  socket)
+	user.pseudo = pseudo
 
-	broadcast(mut sockets, "$pseudo joined the chat !".bytes(), &net.TcpConn{})
+	users.insert(users.len,  user)
+
+	broadcast(mut users, "$pseudo joined the chat !".bytes(), &utils.User{})
 	for {
 		mut datas := []u8{len: 1024}
-		length := socket.read(mut datas) or {
+		length := user.read(mut datas) or {
 			eprintln("[ERROR] "+err.str())
-			delete_socket_from_sockets(mut sockets, socket)
+			disconnected(mut users, user)
 			//sockets = sockets.filter( it!=client )
 			break
 		}
-		broadcast(mut sockets, datas[0..length], socket)
+		broadcast(mut users, datas[0..length], user)
 	}
 }
 
-fn delete_socket_from_sockets(mut sockets []net.TcpConn, client &net.TcpConn) {
+fn disconnected(mut users []utils.User, user &utils.User) {
+	delete_socket_from_sockets(mut users, user)
+	if user.pseudo != "" {
+		broadcast(mut users, "${user.pseudo} left the chat !".bytes(), &utils.User{})
+	}
+}
+
+fn delete_socket_from_sockets(mut sockets []utils.User, client &utils.User) {
 	mut i := -1
 	for index, socket in sockets {
 		if socket == client {
@@ -67,13 +76,13 @@ fn delete_socket_from_sockets(mut sockets []net.TcpConn, client &net.TcpConn) {
 	}
 }
 
-fn broadcast(mut sockets []net.TcpConn, datas []u8, ignore &net.TcpConn) {
-	for mut socket in sockets {
-		if ignore!=socket {
-			socket.write_string("${datas.bytestr()}\n") or {
-				delete_socket_from_sockets(mut sockets, socket)
+fn broadcast(mut users []utils.User, data []u8, ignore &utils.User) {
+	for mut user in users {
+		if ignore!=user {
+			user.write_string("${data.bytestr()}\n") or {
+				disconnected(mut users, user)
 			}
 		}
 	}
-	println("[LOG] ${datas.bytestr()}")
+	println("[LOG] ${data.bytestr()}")
 }

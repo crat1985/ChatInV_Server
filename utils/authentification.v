@@ -22,6 +22,7 @@ pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, s
 		}
 		mut password := data[0..lenght].bytestr()
 		if pseudo.len < 8 || password.len < 8 {
+			println("[LOG] ${socket.addr()!} => 'Pseudo or password too short !'")
 			socket.write_string("Pseudo or password too short !") or {
 				return "Error while writing too short error : $err", "", ""
 			}
@@ -33,6 +34,7 @@ pub fn ask_credentials(mut socket &net.TcpConn, db sqlite.DB) (string, string, s
 			return "", pseudo, password
 		}
 
+		println("[LOG] ${socket.addr()!} => 'Wrong password !'")
 		socket.write_string("Wrong password !\n")
 	}
 

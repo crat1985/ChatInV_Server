@@ -34,6 +34,7 @@ fn main() {
 fn handle_user(mut socket &net.TcpConn, mut sockets []net.TcpConn, db sqlite.DB) {
 	error, pseudo, password := utils.ask_credentials(mut socket, db)
 	if error!="" {
+		println("[LOG] ${socket.addr()!} => '$error'")
 		delete_socket_from_sockets(mut sockets, socket)
 		return
 	}

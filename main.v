@@ -4,6 +4,8 @@ import net
 import utils
 import time
 import db.sqlite
+import crypto.sha256
+import rand
 
 fn main() {
 	mut users := []utils.User{}
@@ -16,6 +18,15 @@ fn main() {
 		panic(err)
 	}
 
+	mut account := utils.Account{
+		username: "Guest"
+		password: sha256.hexhash("mdr")
+		salt: rand.ascii(8)
+	}
+	println(account.password)
+	utils.insert_account(db, mut account)
+	println(account.password)
+
 	server.set_accept_timeout(time.infinite)
 
 	println("Server started at http://localhost:8888/")
@@ -26,14 +37,14 @@ fn main() {
 			continue
 		}
 		socket.set_read_timeout(time.infinite)
-		socket.set_write_timeout(2 *time.minute)
+		socket.set_write_timeout(time.infinite)
 		mut user := utils.User{socket, ""}
 		spawn handle_user(mut &user, mut &users, db)
 	}
 }
 
 fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
-	error, pseudo, _ := utils.ask_credentials(mut user, db)
+	error, pseudo, _ := utils.ask_credentials_new_way(mut user, db)
 	if error!="" {
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
 		disconnected(mut users, user)

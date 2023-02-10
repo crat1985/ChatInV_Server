@@ -1,12 +1,15 @@
 module utils
 
 import db.sqlite
+import crypto.sha256
 
 [table: 'account']
 pub struct Account {
 	id int [primary; sql: serial]
-	pseudo string [nonnull]
+	pub mut:
+	username string [nonnull]
 	password string [nonnull]
+	salt string [nonnull]
 }
 
 pub fn init_database() sqlite.DB {
@@ -23,7 +26,7 @@ pub fn init_database() sqlite.DB {
 
 pub fn delete_account(db sqlite.DB, account Account) {
 	sql db {
-		delete from Account where pseudo == account.pseudo
+		delete from Account where username == account.username
 	}
 }
 
@@ -33,14 +36,15 @@ pub fn get_number_of_accounts(db sqlite.DB) int {
 	}
 }
 
-pub fn get_account_by_pseudo(db sqlite.DB, pseudo string) Account {
+pub fn get_account_by_pseudo(db sqlite.DB, username string) Account {
 	return sql db {
-		select from Account where pseudo == pseudo limit 1
+		select from Account where username == username limit 1
 	}
 }
 
-pub fn insert_account(db sqlite.DB, account Account) {
-	if account_exists(db, account.pseudo) {
+pub fn insert_account(db sqlite.DB, mut account Account) {
+	account.password = sha256.hexhash(account.salt+account.password)
+	if account_exists(db, account.username) {
 		println("ALREADY EXISTS")
 		return
 	}

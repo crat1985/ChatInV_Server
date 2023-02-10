@@ -70,7 +70,7 @@ fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
 			disconnected(mut users, user)
 			break
 		}
-		broadcast(mut users, datas[0..length], user)
+		broadcast(mut users, datas[0..length], &utils.User{})
 	}
 }
 

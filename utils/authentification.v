@@ -24,11 +24,14 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 		account := get_account_by_pseudo(db, pseudo)
 
 		if sha256.hexhash(account.salt+password) == account.password {
+			user.write_string("0Welcome $pseudo") or {
+				return "Error while sending welcome\n", "", ""
+			}
 			return "", pseudo, password
 		}
 
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")
-		user.write_string("Wrong password !\n") or {
+		user.write_string("1Wrong password !\n") or {
 			return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", "", ""
 		}
 	}

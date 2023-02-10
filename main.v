@@ -56,7 +56,7 @@ fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
 
 	users.insert(users.len,  user)
 
-	broadcast(mut users, "$pseudo joined the chat !".bytes(), &utils.User{})
+	broadcast(mut users, "$pseudo joined the chat !".bytes(), user)
 	for {
 		mut datas := []u8{len: 1024}
 		length := user.read(mut datas) or {

@@ -1,7 +1,6 @@
 module utils
 
 import db.sqlite
-import crypto.sha256
 
 [table: 'account']
 pub struct Account {
@@ -42,8 +41,7 @@ pub fn get_account_by_pseudo(db sqlite.DB, username string) Account {
 	}
 }
 
-pub fn insert_account(db sqlite.DB, mut account Account) {
-	account.password = sha256.hexhash(account.salt+account.password)
+pub fn insert_account(db sqlite.DB, account Account) {
 	if account_exists(db, account.username) {
 		println("ALREADY EXISTS")
 		return

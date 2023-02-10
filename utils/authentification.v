@@ -1,6 +1,7 @@
 module utils
 
 import db.sqlite
+import crypto.sha256
 
 pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 	for {
@@ -10,26 +11,20 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 			return "Cannot read credentials", "", ""
 		}
 		credentials = credentials[0..length]
-		mut index := -1
-		for i, element in credentials {
-			if element == 2 {
-				index = i
-				break
-			}
-		}
-		if index == -1 {
-			user.write_string("Bad credentials !") or {
-				return "Socket disconnected !", "", ""
-			}
-			continue
-		}
-		pseudo := credentials[..index]
-		password := credentials[index+1..]
+		pseudo_length := credentials[0..2].bytestr().int()
+		credentials = credentials[2..]
+		pseudo := credentials[0..pseudo_length].bytestr()
+		println("Pseudo : $pseudo len: $pseudo_length")
+		credentials = credentials[pseudo_length..]
+		password_length := credentials[0..2].bytestr().int()
+		println("Password len : $password_length")
+		credentials = credentials[2..]
+		password := credentials[..password_length].bytestr()
 
-		account := get_account_by_pseudo(db, pseudo.bytestr())
+		account := get_account_by_pseudo(db, pseudo)
 
-		if password.bytestr() == account.password {
-			return "", pseudo.bytestr(), password.bytestr()
+		if sha256.hexhash(account.salt+password) == account.password {
+			return "", pseudo, password
 		}
 
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")

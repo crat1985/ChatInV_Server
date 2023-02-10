@@ -24,8 +24,9 @@ fn main() {
 		salt: rand.ascii(8)
 	}
 	println(account.password)
-	utils.insert_account(db, mut account)
+	account.password = sha256.hexhash(account.salt+account.password)
 	println(account.password)
+	utils.insert_account(db, account)
 
 	server.set_accept_timeout(time.infinite)
 

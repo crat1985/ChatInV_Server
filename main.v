@@ -6,6 +6,7 @@ import time
 import db.sqlite
 import crypto.sha256
 import rand
+import os
 
 fn main() {
 	mut users := []utils.User{}
@@ -14,7 +15,12 @@ fn main() {
 
 	println("Number of accounts : ${utils.get_number_of_accounts(db)}")
 
-	mut server := net.listen_tcp(.ip6, ":8888") or {
+	mut port := os.input("Port (default: 8888) : ")
+	if port.is_blank() {
+		port = "8888"
+	}
+
+	mut server := net.listen_tcp(.ip6, ":$port") or {
 		panic(err)
 	}
 

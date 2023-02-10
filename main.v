@@ -44,7 +44,7 @@ fn main() {
 }
 
 fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
-	error, pseudo, _ := utils.ask_credentials_new_way(mut user, db)
+	error, pseudo, _ := utils.ask_credentials(mut user, db)
 	if error!="" {
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
 		disconnected(mut users, user)
@@ -61,7 +61,6 @@ fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
 		length := user.read(mut datas) or {
 			eprintln("[ERROR] "+err.str())
 			disconnected(mut users, user)
-			//sockets = sockets.filter( it!=client )
 			break
 		}
 		broadcast(mut users, datas[0..length], user)

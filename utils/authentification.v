@@ -24,6 +24,12 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 		account := get_account_by_pseudo(db, pseudo)
 
 		if sha256.hexhash(account.salt+password) == account.password {
+			if is_pseudo_connected(mut users, pseudo) {
+				user.write_string("1Already connected !") or {
+					return "Error while sending already connected !\n", "", ""
+				}
+			}
+
 			user.write_string("0Welcome $pseudo") or {
 				return "Error while sending welcome\n", "", ""
 			}
@@ -36,4 +42,13 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 		}
 	}
 	return "This should never append !", "", ""
+}
+
+fn is_pseudo_connected(mut users []utils.User, pseudo string) bool {
+	for user in users {
+		if user.pseudo == pseudo {
+			return true
+		}
+	}
+	return false
 }

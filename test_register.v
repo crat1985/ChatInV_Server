@@ -32,7 +32,7 @@ fn main() {
 
 	mut password := ""
 	for {
-		password = os.input("Password : ")
+		password = os.input_password("Password : ")!
 		if password.is_blank() {
 			continue
 		}

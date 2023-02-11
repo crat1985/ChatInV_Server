@@ -28,7 +28,10 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 		password := credentials[..password_length].bytestr()
 		if mode == "l" { return app.login(mut user, username, password) }
 		$if private {
-			user.write_string("1The server is private ! Cannot create an account !")
+			user.write_string("1The server is private ! Cannot create an account !") or {
+				return "Failed to send \"he server is private ! Cannot create an account !\"", ""
+			}
+			return "The server is private ! Cannot create an account !", ""
 		} $else {
 			if mode == "r" { return app.register(mut user,  username, password) }
 		}

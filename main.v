@@ -68,6 +68,6 @@ pub fn handle_user(mut user utils.User, mut app utils.App) {
 		mut string_datas := datas.bytestr()
 		string_datas = string_datas.trim_space()
 		if string_datas.is_blank() { continue }
-		app.broadcast(string_datas.bytes(), &utils.User{})
+		app.broadcast("$pseudo> $string_datas".bytes(), &utils.User{})
 	}
 }

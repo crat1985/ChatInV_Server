@@ -29,14 +29,6 @@ fn main() {
 		panic(err)
 	}
 
-	mut account := utils.Account{
-		username: "Guest"
-		password: sha256.hexhash("supermdp")
-		salt: rand.ascii(8)
-	}
-	account.password = sha256.hexhash(account.salt+account.password)
-	app.insert_account(account)
-
 	app.server.set_accept_timeout(time.infinite)
 
 	println("Server started at http://localhost:${app.port}/")

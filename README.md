@@ -6,7 +6,7 @@ https://github.com/RIC217/ChatInV_Client
 
 To launch the server :
 ```shell
-v run main.v
+v run Chat_Server.v
 ```
 To test the register system :
 ```shell

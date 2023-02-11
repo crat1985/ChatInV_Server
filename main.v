@@ -51,7 +51,7 @@ fn main() {
 }
 
 fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
-	error, pseudo, _ := utils.ask_credentials(mut user, db)
+	error, pseudo, _ := utils.ask_credentials(mut user, db, mut users)
 	if error!="" {
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
 		disconnected(mut users, user)

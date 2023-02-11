@@ -12,3 +12,7 @@ To test the register system :
 ```shell
 v run test_register.v
 ```
+To test the login system :
+```shell
+v run test_login.v
+```

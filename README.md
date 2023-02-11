@@ -11,7 +11,15 @@ v run Chat_Server.v
 
 To launch the server in private mode :
 ```shell
-v run Chat_Server.v -d private
+v Chat_Server.v -d private
+```
+on Linux and MacOS :
+```shell
+./Chat_Server
+```
+on Windows :
+```shell
+.\Chat_Server.exe
 ```
 
 To test the register system :

@@ -70,7 +70,11 @@ fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
 			disconnected(mut users, user)
 			break
 		}
-		broadcast(mut users, datas[0..length], &utils.User{})
+		datas = datas[0..length]
+		mut string_datas := datas.bytestr()
+		string_datas = string_datas.trim_space()
+		if string_datas.is_blank() { continue }
+		broadcast(mut users, string_datas.bytes(), &utils.User{})
 	}
 }
 
@@ -96,7 +100,7 @@ fn delete_socket_from_sockets(mut sockets []utils.User, client &utils.User) {
 fn broadcast(mut users []utils.User, data []u8, ignore &utils.User) {
 	for mut user in users {
 		if ignore!=user {
-			user.write_string("${data.bytestr()}\n") or {
+			user.write(data) or {
 				disconnected(mut users, user)
 			}
 		}

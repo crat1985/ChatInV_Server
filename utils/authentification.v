@@ -1,6 +1,5 @@
 module utils
 
-import db.sqlite
 import crypto.sha256
 import rand
 
@@ -59,6 +58,20 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 
 fn (mut app App) register(mut user &User, pseudo string, password string) (string, string) {
 	username := pseudo.trim_space()
+	mut error := false
+	for index, i in username {
+		if index == 0 {
+			if !i.is_letter() {
+				error = true
+				break
+			}
+		} else if !i.is_alnum() & i != "_" {
+			error = true
+		}
+	}
+	if error {
+		return "Pseudo must begin with a letter and must contains only letters, numbers and underscores !", ""
+	}
 	if username.len < 3 || password.len < 8 {
 		user.write_string("1Username or password too short !\n") or {
 			return "Error while sending username or password too short !", ""

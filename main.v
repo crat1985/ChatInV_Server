@@ -3,8 +3,6 @@ module main
 import net
 import utils
 import time
-import crypto.sha256
-import rand
 import os
 import db.sqlite
 

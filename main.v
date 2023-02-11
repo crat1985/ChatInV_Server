@@ -25,13 +25,13 @@ fn main() {
 		app.port = port
 	}
 
-	app.server = net.listen_tcp(.ip6, ":$port") or {
+	app.server = net.listen_tcp(.ip6, ":${app.port}") or {
 		panic(err)
 	}
 
 	mut account := utils.Account{
 		username: "Guest"
-		password: sha256.hexhash("mdr")
+		password: sha256.hexhash("supermdp")
 		salt: rand.ascii(8)
 	}
 	account.password = sha256.hexhash(account.salt+account.password)
@@ -39,7 +39,7 @@ fn main() {
 
 	app.server.set_accept_timeout(time.infinite)
 
-	println("Server started at http://localhost:8888/")
+	println("Server started at http://localhost:${app.port}/")
 
 	for {
 		mut socket := app.server.accept() or {
@@ -53,7 +53,7 @@ fn main() {
 	}
 }
 
-pub fn handle_user(mut user &utils.User, mut app utils.App) {
+pub fn handle_user(mut user utils.User, mut app utils.App) {
 	error, pseudo := app.ask_credentials(mut user)
 	if error!="" {
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")

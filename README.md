@@ -8,6 +8,12 @@ To launch the server :
 ```shell
 v run Chat_Server.v
 ```
+
+To launch the server in private mode :
+```shell
+v run Chat_Server.v -d private
+```
+
 To test the register system :
 ```shell
 v run test_register.v

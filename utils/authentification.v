@@ -78,9 +78,6 @@ fn (mut app App) register(mut user &User, pseudo string, password string) (strin
 	}
 	account.password = sha256.hexhash(account.salt+account.password)
 	app.insert_account(account)
-	user.write_string("0Welcome $username") or {
-		return "Error while sending welcome\n", ""
-	}
 	user.write_string("0Account $username created !") or {
 		return "Error while sending welcome\n", ""
 	}

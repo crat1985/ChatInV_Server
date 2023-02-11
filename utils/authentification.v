@@ -3,7 +3,7 @@ module utils
 import db.sqlite
 import crypto.sha256
 
-pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
+pub fn ask_credentials(mut user &User, db sqlite.DB, mut users []User) (string, string, string) {
 	for {
 		mut credentials := []u8{len: 1024}
 		length := user.read(mut credentials) or {
@@ -28,6 +28,7 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 				user.write_string("1Already connected !") or {
 					return "Error while sending already connected !\n", "", ""
 				}
+				return "Already connected\n", "", ""
 			}
 
 			user.write_string("0Welcome $pseudo") or {
@@ -44,7 +45,7 @@ pub fn ask_credentials(mut user &User, db sqlite.DB) (string, string, string) {
 	return "This should never append !", "", ""
 }
 
-fn is_pseudo_connected(mut users []utils.User, pseudo string) bool {
+fn is_pseudo_connected(mut users []User, pseudo string) bool {
 	for user in users {
 		if user.pseudo == pseudo {
 			return true

@@ -3,24 +3,29 @@ module main
 import net
 import utils
 import time
-import db.sqlite
 import crypto.sha256
 import rand
 import os
+import db.sqlite
 
 fn main() {
-	mut users := []utils.User{}
-
-	db := utils.init_database()
-
-	println("Number of accounts : ${utils.get_number_of_accounts(db)}")
-
-	mut port := os.input("Port (default: 8888) : ")
-	if port.is_blank() {
-		port = "8888"
+	mut app := utils.App{
+		users: []utils.User{}
+		db: sqlite.DB{}
+		port: "8888"
+		server: 0
 	}
 
-	mut server := net.listen_tcp(.ip6, ":$port") or {
+	app.init_database()
+
+	println("Number of accounts : ${app.get_number_of_accounts()}")
+
+	mut port := os.input("Port (default: 8888) : ")
+	if !port.is_blank() {
+		app.port = port
+	}
+
+	app.server = net.listen_tcp(.ip6, ":$port") or {
 		panic(err)
 	}
 
@@ -29,81 +34,48 @@ fn main() {
 		password: sha256.hexhash("mdr")
 		salt: rand.ascii(8)
 	}
-	println(account.password)
 	account.password = sha256.hexhash(account.salt+account.password)
-	println(account.password)
-	utils.insert_account(db, account)
+	app.insert_account(account)
 
-	server.set_accept_timeout(time.infinite)
+	app.server.set_accept_timeout(time.infinite)
 
 	println("Server started at http://localhost:8888/")
 
 	for {
-		mut socket := server.accept() or {
+		mut socket := app.server.accept() or {
 			eprintln(err)
 			continue
 		}
 		socket.set_read_timeout(time.infinite)
 		socket.set_write_timeout(time.infinite)
 		mut user := utils.User{socket, ""}
-		spawn handle_user(mut &user, mut &users, db)
+		spawn handle_user(mut &user, mut &app)
 	}
 }
 
-fn handle_user(mut user &utils.User, mut users []utils.User, db sqlite.DB) {
-	error, pseudo, _ := utils.ask_credentials(mut user, db, mut users)
+pub fn handle_user(mut user &utils.User, mut app utils.App) {
+	error, pseudo := app.ask_credentials(mut user)
 	if error!="" {
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
-		disconnected(mut users, user)
 		return
 	}
 
 	user.pseudo = pseudo
 
-	users.insert(users.len,  user)
+	app.users.insert(app.users.len,  user)
 
-	broadcast(mut users, "$pseudo joined the chat !".bytes(), user)
+	app.broadcast("$pseudo joined the chat !".bytes(), &utils.User{})
 	for {
 		mut datas := []u8{len: 1024}
 		length := user.read(mut datas) or {
 			eprintln("[ERROR] "+err.str())
-			disconnected(mut users, user)
+			app.disconnected( user)
 			break
 		}
 		datas = datas[0..length]
 		mut string_datas := datas.bytestr()
 		string_datas = string_datas.trim_space()
 		if string_datas.is_blank() { continue }
-		broadcast(mut users, string_datas.bytes(), &utils.User{})
+		app.broadcast(string_datas.bytes(), &utils.User{})
 	}
-}
-
-fn disconnected(mut users []utils.User, user &utils.User) {
-	delete_socket_from_sockets(mut users, user)
-	if user.pseudo != "" {
-		broadcast(mut users, "${user.pseudo} left the chat !".bytes(), &utils.User{})
-	}
-}
-
-fn delete_socket_from_sockets(mut sockets []utils.User, client &utils.User) {
-	mut i := -1
-	for index, socket in sockets {
-		if socket == client {
-			i = index
-		}
-	}
-	if i != -1 {
-		sockets.delete(i)
-	}
-}
-
-fn broadcast(mut users []utils.User, data []u8, ignore &utils.User) {
-	for mut user in users {
-		if ignore!=user {
-			user.write(data) or {
-				disconnected(mut users, user)
-			}
-		}
-	}
-	println("[LOG] ${data.bytestr()}")
 }

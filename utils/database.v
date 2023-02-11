@@ -11,16 +11,14 @@ pub struct Account {
 	salt string [nonnull]
 }
 
-pub fn init_database() sqlite.DB {
-	db := sqlite.connect("accounts.db") or {
+pub fn (mut app App) init_database() {
+	app.db = sqlite.connect("accounts.db") or {
 		panic(err)
 	}
 
-	sql db {
+	sql app.db {
 		create table Account
 	}
-
-	return db
 }
 
 pub fn delete_account(db sqlite.DB, account Account) {
@@ -29,37 +27,36 @@ pub fn delete_account(db sqlite.DB, account Account) {
 	}
 }
 
-pub fn get_number_of_accounts(db sqlite.DB) int {
-	return sql db {
+pub fn (mut app App) get_number_of_accounts() int {
+	return sql app.db {
 		select count from Account
 	}
 }
 
-pub fn get_account_by_pseudo(db sqlite.DB, username string) Account {
-	return sql db {
+pub fn (mut app App) get_account_by_pseudo(username string) Account {
+	return sql app.db {
 		select from Account where username == username limit 1
 	}
 }
 
-pub fn insert_account(db sqlite.DB, account Account) {
-	if account_exists(db, account.username) {
+pub fn (mut app App) insert_account(account Account) {
+	if app.account_exists(account.username) {
 		println("ALREADY EXISTS")
 		return
 	}
-	sql db {
+	sql app.db {
 		insert account into Account
 	}
 }
 
-pub fn get_all_accounts(db sqlite.DB) []Account {
-	accounts := sql db {
+pub fn (mut app App) get_all_accounts() []Account {
+	return sql app.db {
 		select from Account
 	}
-	return accounts
 }
 
-pub fn account_exists(db sqlite.DB, pseudo string) bool {
-	account := get_account_by_pseudo(db, pseudo)
+pub fn (mut app App) account_exists(username string) bool {
+	account := app.get_account_by_pseudo(username)
 	if account.id == 0 {
 		return false
 	}

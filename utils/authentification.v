@@ -3,50 +3,50 @@ module utils
 import db.sqlite
 import crypto.sha256
 
-pub fn ask_credentials(mut user &User, db sqlite.DB, mut users []User) (string, string, string) {
+pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 	for {
 		mut credentials := []u8{len: 1024}
 		length := user.read(mut credentials) or {
 			eprintln(err)
-			return "Cannot read credentials", "", ""
+			return "Cannot read credentials", ""
 		}
 		credentials = credentials[0..length]
 		pseudo_length := credentials[0..2].bytestr().int()
 		credentials = credentials[2..]
-		pseudo := credentials[0..pseudo_length].bytestr()
-		println("Pseudo : $pseudo len: $pseudo_length")
+		username := credentials[0..pseudo_length].bytestr()
+		println("Pseudo : $username len: $pseudo_length")
 		credentials = credentials[pseudo_length..]
 		password_length := credentials[0..2].bytestr().int()
 		println("Password len : $password_length")
 		credentials = credentials[2..]
 		password := credentials[..password_length].bytestr()
 
-		account := get_account_by_pseudo(db, pseudo)
+		account := app.get_account_by_pseudo(username)
 
 		if sha256.hexhash(account.salt+password) == account.password {
-			if is_pseudo_connected(mut users, pseudo) {
+			if app.is_pseudo_connected(username) {
 				user.write_string("1Already connected !") or {
-					return "Error while sending already connected !\n", "", ""
+					return "Error while sending already connected !\n", ""
 				}
-				return "Already connected\n", "", ""
+				return "Already connected\n", ""
 			}
 
-			user.write_string("0Welcome $pseudo") or {
-				return "Error while sending welcome\n", "", ""
+			user.write_string("0Welcome $username") or {
+				return "Error while sending welcome\n", ""
 			}
-			return "", pseudo, password
+			return "", username
 		}
 
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")
 		user.write_string("1Wrong password !\n") or {
-			return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", "", ""
+			return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", ""
 		}
 	}
-	return "This should never append !", "", ""
+	return "This should never append !", ""
 }
 
-fn is_pseudo_connected(mut users []User, pseudo string) bool {
-	for user in users {
+fn (mut app App) is_pseudo_connected(pseudo string) bool {
+	for user in app.users {
 		if user.pseudo == pseudo {
 			return true
 		}

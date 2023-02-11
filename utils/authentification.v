@@ -65,7 +65,7 @@ fn (mut app App) register(mut user &User, pseudo string, password string) (strin
 				error = true
 				break
 			}
-		} else if !i.is_alnum() & i != "_" {
+		} else if !i.is_alnum() && i != '_'.u8() {
 			error = true
 		}
 	}

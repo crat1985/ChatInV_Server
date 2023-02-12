@@ -39,7 +39,7 @@ fn main() {
 		} else if command_lower.starts_with("add ") {
 			add_command(command, db)
 		} else if command_lower.starts_with("remove ") || command_lower.starts_with("rm ") {
-			split := command_lower.split(" ")
+			split := command.split(" ")
 			if split.len < 2 {
 				println("Syntax : remove/rm <username>")
 				continue
@@ -141,4 +141,5 @@ fn remove_command(username string, db sqlite.DB) {
 	sql db {
 		delete from Account where username == username
 	}
+	println("Deleted $username from database !")
 }

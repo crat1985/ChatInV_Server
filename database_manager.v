@@ -73,6 +73,7 @@ fn help_command() {
 	println("list => Display all accounts.")
 	println("     -a => Display all infos about each account.")
 	println("add <username> <password> => Add an account to the database.")
+	println("remove/rm <username> => Remove an account from the database.")
 	println("exit => Exit the program.")
 }
 

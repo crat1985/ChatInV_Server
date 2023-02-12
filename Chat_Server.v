@@ -52,7 +52,7 @@ pub fn handle_user(mut user utils.User, mut app utils.App) {
 
 	app.users.insert(app.users.len,  user)
 
-	app.broadcast("$pseudo joined the chat !".bytes(), &utils.User{})
+	app.broadcast("$pseudo joined the chat !", &utils.User{})
 	for {
 		mut datas := []u8{len: 1024}
 		length := user.read(mut datas) or {
@@ -61,9 +61,9 @@ pub fn handle_user(mut user utils.User, mut app utils.App) {
 			break
 		}
 		datas = datas[0..length]
-		mut string_datas := datas.bytestr()
-		string_datas = string_datas.trim_space()
-		if string_datas.is_blank() { continue }
-		app.broadcast("$pseudo> $string_datas".bytes(), &utils.User{})
+		mut string_data := datas.bytestr()
+		string_data = string_data.trim_space()
+		if string_data.is_blank() { continue }
+		app.broadcast("$pseudo> $string_data", &utils.User{})
 	}
 }

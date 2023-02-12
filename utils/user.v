@@ -11,7 +11,7 @@ pub struct User {
 pub fn (mut app App) disconnected(user &User) {
 	app.delete_socket_from_sockets(user)
 	if user.pseudo != "" {
-		app.broadcast("${user.pseudo} left the chat !".bytes(), &User{})
+		app.broadcast("${user.pseudo} left the chat !", &User{})
 	}
 }
 
@@ -27,13 +27,20 @@ fn (mut app App) delete_socket_from_sockets(client &User) {
 	}
 }
 
-pub fn (mut app App) broadcast(data []u8, ignore &User) {
+pub fn (mut app App) broadcast(data string, ignore &User) {
 	for mut user in app.users {
 		if ignore!=user {
-			user.write(data) or {
+			if user.send_message(data) {
 				app.disconnected(user)
 			}
 		}
 	}
-	println("[LOG] ${data.bytestr()}")
+	println("[LOG] ${data}")
+}
+
+pub fn (mut user User) send_message(data string) bool {
+	user.write_string("${data.len:05}$data") or {
+		return true
+	}
+	return false
 }

@@ -11,7 +11,7 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 			return "Cannot read credentials", ""
 		}
 		//removing null bytes
-		credentials = credentials[0..length]
+		credentials = credentials[..length]
 		//getting mode
 		if credentials.len < 10 {
 			if user.send_message("1Bad credentials") {

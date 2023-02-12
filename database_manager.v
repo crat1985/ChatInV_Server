@@ -15,7 +15,13 @@ pub struct Account {
 }
 
 fn main() {
-	mut db := sqlite.connect("accounts.db") or {
+	mut db_path := os.input("Path to the database (accounts.db): ")
+
+	if db_path.is_blank() {
+		db_path = "accounts.db"
+	}
+
+	mut db := sqlite.connect(db_path) or {
 		panic(err)
 	}
 	sql db {

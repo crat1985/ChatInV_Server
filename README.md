@@ -30,3 +30,8 @@ To test the login system :
 ```shell
 v run test_login.v
 ```
+
+Launch database manager :
+```shell
+v run database_manager.v
+```

@@ -1,7 +1,7 @@
 module utils
 
-import db.sqlite
 import net
+import db.sqlite
 
 pub struct App {
 	pub mut:

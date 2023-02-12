@@ -16,8 +16,6 @@ fn main() {
 
 	app.init_database()
 
-	println("Number of accounts : ${app.get_number_of_accounts()}")
-
 	mut port := os.input("Port (default: 8888) : ")
 	if !port.is_blank() {
 		app.port = port

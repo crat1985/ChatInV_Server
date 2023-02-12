@@ -4,8 +4,8 @@ import db.sqlite
 
 [table: 'account']
 pub struct Account {
-	id int [primary; sql: serial]
 	pub mut:
+	id int [primary; sql: serial]
 	username string [nonnull]
 	password string [nonnull]
 	salt string [nonnull]
@@ -21,9 +21,9 @@ pub fn (mut app App) init_database() {
 	}
 }
 
-pub fn delete_account(db sqlite.DB, account Account) {
-	sql db {
-		delete from Account where username == account.username
+pub fn (mut app App) delete_account(username string) {
+	sql app.db {
+		delete from Account where username == username
 	}
 }
 
@@ -56,9 +56,5 @@ pub fn (mut app App) get_all_accounts() []Account {
 }
 
 pub fn (mut app App) account_exists(username string) bool {
-	account := app.get_account_by_pseudo(username)
-	if account.id == 0 {
-		return false
-	}
-	return true
+	return app.get_account_by_pseudo(username).id != 0
 }

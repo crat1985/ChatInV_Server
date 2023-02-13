@@ -79,7 +79,7 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 				continue
 			}
 		}
-
+		break
 	}
 	return "This should never happens", ""
 }
@@ -148,6 +148,7 @@ fn (mut app App) register(mut user &User, pseudo string, password string) (strin
 	if user.send_message("0Account $username created !") {
 		return "Error while sending welcome", "", true
 	}
+	user.send_message("Welcome $username")
 	app.broadcast("$username just created his account !", user)
 	return "", username, true
 }

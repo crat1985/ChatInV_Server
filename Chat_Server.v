@@ -55,15 +55,23 @@ pub fn handle_user(mut user utils.User, mut app utils.App) {
 	app.broadcast("$pseudo joined the chat !", &utils.User{})
 	for {
 		mut datas := []u8{len: 1024}
-		length := user.read(mut datas) or {
+		mut length := user.read(mut datas) or {
 			eprintln("[ERROR] "+err.str())
 			app.disconnected( user)
 			break
 		}
 		datas = datas[0..length]
 		mut string_data := datas.bytestr()
-		string_data = string_data.trim_space()
-		if string_data.is_blank() { continue }
+		length = string_data[..5].int()
+		if string_data.len < 6 {
+			eprintln("$pseudo sent an invalid message : $string_data")
+			continue
+		}
+		string_data = string_data[5..]
+		if string_data.len < length {
+			eprintln("$pseudo sent an invalid message : $string_data")
+			continue
+		}
 		app.broadcast("$pseudo> $string_data", &utils.User{})
 	}
 }

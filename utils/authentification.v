@@ -6,23 +6,33 @@ import rand
 pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 	for {
 		mut credentials := []u8{len: 1024}
-		length := user.read(mut credentials) or {
+		mut length := user.read(mut credentials) or {
 			eprintln(err)
 			return "Cannot read credentials", ""
 		}
 		//removing null bytes
 		credentials = credentials[..length]
+		mut data := credentials.bytestr()
 		//getting mode
-		if credentials.len < 10 {
+		if data.len < 10 {
 			if user.send_message("1Bad credentials") {
 				return "Error while sending bad credentials !", ""
 			}
 			continue
 		}
+		length = data[..5].int()
+		data = data[5..]
+		if data.len < length {
+			if user.send_message("1Bad credentials") {
+				return "Error while sending bad credentials !", ""
+			}
+			continue
+		}
+		credentials = data[..length].bytes()
 		mode := credentials[0].ascii_str()
 		credentials = credentials[1..]
 		//getting username length
-		username_length := credentials[0..2].bytestr().int()
+		username_length := credentials[..2].bytestr().int()
 		credentials = credentials[2..]
 		if credentials.len < username_length {
 			if user.send_message("1Bad credentials") {
@@ -88,7 +98,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 			if user.send_message("0Welcome $username") {
 				return "Error while sending welcome", "", true
 			}
-			return "", username, false
+			return "", username, true
 		}
 
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")

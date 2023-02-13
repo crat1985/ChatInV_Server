@@ -101,7 +101,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 				return "Already connected", "", false
 			}
 
-			if user.send_message("0Welcome $username") {
+			if user.send_message("0Welcome $username !") {
 				return "Error while sending welcome", "", true
 			}
 			return "", username, true

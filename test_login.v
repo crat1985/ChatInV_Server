@@ -68,10 +68,10 @@ fn show_message(data string, check0or1 bool) {
 		eprintln("msg.len < 6")
 		return
 	}
-	length := msg[..5].int()
+	mut length := msg[..5].int()
 	msg = msg[5..]
 	if msg.len < length {
-		eprintln("msg.len < length ($length)")
+		eprintln("msg.len < length ($length) : $msg")
 		return
 	}
 	if check0or1 {
@@ -82,14 +82,19 @@ fn show_message(data string, check0or1 bool) {
 				return
 			}
 			'0' {
-				msg = data[1..length]
-				println("Success : $msg")
+				println("Success : ${msg[1..length]}")
+				msg = msg[1..]
+				length--
 			}
 			else {
 				eprintln("Error while receiving server's response, this should never happens.\nReport it to the developer.")
 				return
 			}
 		}
+	}
+
+	if !check0or1 {
+		println(msg[..length])
 	}
 
 	if msg.len == length {

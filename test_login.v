@@ -45,29 +45,56 @@ fn main() {
 
 	password = sha256.hexhash(password)
 
-	connection.write_string("l${pseudo.len:02}$pseudo${password.len:02}$password") or {
-		panic(err)
-	}
+	send_message(mut connection, "l${pseudo.len:02}$pseudo${password.len:02}$password")
 
 	mut data := []u8{len: 1024}
 	length := connection.read(mut data) or {
 		eprintln(err.msg())
 		return
 	}
-	data = data[..length]
 
-	match data[0].ascii_str() {
-		'1' {
-			data = data[1..]
-			eprintln(data.bytestr())
-		}
-		'0' {
-			data = data[1..]
-			println("Success : ${data.bytestr()}")
-		}
-		else {
-			eprintln("Error while receiving server's response, this should never happens.\nReport it to the developer.")
-			return
+	show_message(data[..length].bytestr(), true)
+}
+
+fn send_message(mut socket &net.TcpConn, data string) {
+	socket.write_string("${data.len:05}$data") or {
+		panic(err)
+	}
+}
+
+fn show_message(data string, check0or1 bool) {
+	mut msg := data
+	if msg.len < 6 {
+		eprintln("msg.len < 6")
+		return
+	}
+	length := msg[..5].int()
+	msg = msg[5..]
+	if msg.len < length {
+		eprintln("msg.len < length ($length)")
+		return
+	}
+	if check0or1 {
+		match msg[0].ascii_str() {
+			'1' {
+				msg = msg[1..length]
+				eprintln(data)
+				return
+			}
+			'0' {
+				msg = data[1..length]
+				println("Success : $msg")
+			}
+			else {
+				eprintln("Error while receiving server's response, this should never happens.\nReport it to the developer.")
+				return
+			}
 		}
 	}
+
+	if msg.len == length {
+		return
+	}
+
+	show_message(msg[length..], false)
 }

@@ -27,7 +27,7 @@ fn main() {
 
 	app.server.set_accept_timeout(time.infinite)
 
-	println("Server started at http://localhost:${app.port}/")
+	println("Server started on port ${app.port}")
 
 	for {
 		mut socket := app.server.accept() or {
@@ -36,8 +36,8 @@ fn main() {
 		}
 		socket.set_read_timeout(time.infinite)
 		socket.set_write_timeout(time.infinite)
-		mut user := utils.User{socket, ""}
-		spawn handle_user(mut &user, mut &app)
+		mut user := &utils.User{socket, ""}
+		spawn handle_user(mut user, mut &app)
 	}
 }
 

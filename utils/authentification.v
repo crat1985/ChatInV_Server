@@ -29,6 +29,12 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, string) {
 			continue
 		}
 		credentials = data[..length].bytes()
+		if credentials.len == 0 {
+			if user.send_message("1Bad credentials") {
+				return "Error while sending bad credentials !", ""
+			}
+			continue
+		}
 		mode := credentials[0].ascii_str()
 		credentials = credentials[1..]
 		//getting username length

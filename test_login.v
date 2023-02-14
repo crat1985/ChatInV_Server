@@ -78,13 +78,12 @@ fn show_message(data string, check0or1 bool) {
 		match msg[0].ascii_str() {
 			'1' {
 				msg = msg[1..length]
-				eprintln(data)
+				eprintln(msg)
 				return
 			}
 			'0' {
 				println("Success : ${msg[1..length]}")
 				msg = msg[1..]
-				length--
 			}
 			else {
 				eprintln("Error while receiving server's response, this should never happens.\nReport it to the developer.")

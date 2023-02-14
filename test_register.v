@@ -45,7 +45,7 @@ fn main() {
 
 	password = sha256.hexhash(password)
 
-	send_message(mut connection, "r${pseudo.len:02}$pseudo${password.len:02}$password")
+	send_message(mut connection, "r${pseudo.len:02}$pseudo$password")
 
 	mut data := []u8{len: 1024}
 	length := connection.read(mut data) or {

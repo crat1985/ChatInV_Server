@@ -1,12 +1,15 @@
 module utils
 
 import net
+import time
 
 pub struct User {
 	net.TcpConn
 	pub mut:
 		username string
 }
+
+
 
 pub fn (mut app App) disconnected(user &User) {
 	app.delete_socket_from_sockets(user)
@@ -15,6 +18,7 @@ pub fn (mut app App) disconnected(user &User) {
 			message: "${user.username} left the chat !"
 			author_id: 0
 			receiver_id: 0
+			timestamp: time.now().microsecond
 		}
 		app.broadcast(message, &User{})
 	}

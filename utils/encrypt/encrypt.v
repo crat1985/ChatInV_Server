@@ -3,6 +3,7 @@ module encrypt
 import crypto.aes
 import crypto.cipher
 import os
+import libsodium
 
 fn encrypt(mut src []u8, key []u8, iv []u8) {
 	block := aes.new_cipher(key)

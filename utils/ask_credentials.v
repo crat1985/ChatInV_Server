@@ -1,5 +1,7 @@
 module utils
 
+import time
+
 pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 	mut data := []u8{len: 1024}
 	data_length := user.read(mut data) or {
@@ -64,6 +66,7 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 					message: "1The server is private ! Cannot create an account !"
 					author_id: 0
 					receiver_id: -1
+					timestamp: time.now().microsecond
 				}
 				if user.send_message(message, true, mut app) {
 					return "Failed to send \"the server is private ! Cannot create an account !\"", Account{}

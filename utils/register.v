@@ -2,6 +2,7 @@ module utils
 
 import rand
 import crypto.sha256
+import time
 
 fn (mut app App) register(mut user &User, username string, password string) (string, Account) {
 	if username.contains(" ") || username.contains("\t") || username.contains("\n") {
@@ -27,6 +28,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			message: "1Username or password too short !"
 			author_id: 0
 			receiver_id: -1
+			timestamp: time.now().microsecond
 		}
 		if user.send_message(message, true, mut app) {
 			return "Error while sending username or password too short !", Account{}
@@ -38,6 +40,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			message: "1Account with same username already exists !"
 			author_id: 0
 			receiver_id: -1
+			timestamp: time.now().microsecond
 		}
 		if user.send_message(message, true, mut app) {
 			return "Error while sending account with same username already exists !", Account{}
@@ -48,6 +51,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		username: username
 		password: password
 		salt: rand.ascii(8)
+		created: time.now().microsecond
 	}
 	account.password = sha256.hexhash(account.salt+account.password)
 	app.insert_account(account)
@@ -55,6 +59,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		message: "0Account $username created !"
 		author_id: 0
 		receiver_id: account.id
+		timestamp: time.now().microsecond
 	}
 	if user.send_message(message, true, mut app) {
 		return "Error while sending welcome", Account{}
@@ -63,12 +68,14 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		message: "Welcome $username !"
 		author_id: 0
 		receiver_id: account.id
+		timestamp: time.now().microsecond
 	}
 	user.send_message(message, true, mut app)
 	message = Message{
 		message: "$username just created his account !"
 		author_id: 0
 		receiver_id: 0
+		timestamp: time.now().microsecond
 	}
 	account = app.get_account_by_pseudo(account.username)
 	app.broadcast(message, user)

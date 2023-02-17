@@ -9,6 +9,7 @@ pub struct Account {
 	username string [nonnull]
 	password string [nonnull]
 	salt string [nonnull]
+	created int [nonnull]
 }
 
 [table: 'message']
@@ -20,6 +21,7 @@ pub struct Message {
 	// iv []u8 [nonnull]
 	author_id int [nonnull]
 	receiver_id int [nonnull]
+	timestamp int [nonnull]
 }
 
 pub fn insert_message(message Message, db sqlite.DB) {

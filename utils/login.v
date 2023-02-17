@@ -1,6 +1,7 @@
 module utils
 
 import crypto.sha256
+import time
 
 fn (mut app App) login(mut user &User, username string, password string) (string, Account) {
 	account := app.get_account_by_pseudo(username)
@@ -10,6 +11,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 				message: "1Already connected !"
 				author_id: 0
 				receiver_id: -1
+				timestamp: time.now().microsecond
 			}
 			if user.send_message(message, true, mut app) {
 				return "Error while sending already connected !", Account{}
@@ -20,6 +22,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 			message: "0Welcome $username !"
 			author_id: 0
 			receiver_id: account.id
+			timestamp: time.now().microsecond
 		}
 		if user.send_message(message, true, mut app) {
 			return "Error while sending welcome", Account{}
@@ -32,6 +35,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 		message: "1Wrong password !"
 		author_id: 0
 		receiver_id: -1
+		timestamp: time.now().microsecond
 	}
 	if user.send_message(message, true, mut app) {
 		return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", Account{}

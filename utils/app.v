@@ -6,7 +6,8 @@ import db.sqlite
 pub struct App {
 	pub mut:
 	users []User
-	db sqlite.DB
+	accounts_db sqlite.DB
+	messages_db sqlite.DB
 	port string
 	server &net.TcpListener
 }

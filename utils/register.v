@@ -3,9 +3,9 @@ module utils
 import rand
 import crypto.sha256
 
-fn (mut app App) register(mut user &User, username string, password string) (string, string) {
+fn (mut app App) register(mut user &User, username string, password string) (string, Account) {
 	if username.contains(" ") || username.contains("\t") || username.contains("\n") {
-		return "Pseudo cannot contains spaces !", ""
+		return "Pseudo cannot contains spaces !", Account{}
 	}
 	mut error := false
 	for index, c in username {
@@ -20,19 +20,29 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		}
 	}
 	if error {
-		return "Pseudo must begin with a letter and must contains only letters, numbers and underscores !", ""
+		return "Pseudo must begin with a letter and must contains only letters, numbers and underscores !", Account{}
 	}
 	if username.len < 3 || password.len != 64 {
-		if user.send_message("1Username or password too short !") {
-			return "Error while sending username or password too short !", ""
+		message := Message{
+			message: "1Username or password too short !"
+			author_id: 0
+			receiver_id: -1
 		}
-		return "Username or password too short !", ""
+		if user.send_message(message, false, app.messages_db) {
+			return "Error while sending username or password too short !", Account{}
+		}
+		return "Username or password too short !", Account{}
 	}
 	if app.account_exists(username) {
-		if user.send_message("1Account with same username already exists !") {
-			return "Error while sending account with same username already exists !", ""
+		message := Message{
+			message: "1Account with same username already exists !"
+			author_id: 0
+			receiver_id: -1
 		}
-		return "Account with same username already exists !", ""
+		if user.send_message(message, false, app.messages_db) {
+			return "Error while sending account with same username already exists !", Account{}
+		}
+		return "Account with same username already exists !", Account{}
 	}
 	mut account := Account{
 		username: username
@@ -41,10 +51,25 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 	}
 	account.password = sha256.hexhash(account.salt+account.password)
 	app.insert_account(account)
-	if user.send_message("0Account $username created !") {
-		return "Error while sending welcome", ""
+	mut message := Message{
+		message: "0Account $username created !"
+		author_id: 0
+		receiver_id: account.id
 	}
-	user.send_message("Welcome $username")
-	app.broadcast("$username just created his account !", user)
-	return "", username
+	if user.send_message(message, false, app.messages_db) {
+		return "Error while sending welcome", Account{}
+	}
+	message = Message{
+		message: "Welcome $username !"
+		author_id: 0
+		receiver_id: account.id
+	}
+	user.send_message(message, false, app.messages_db)
+	message = Message{
+		message: "$username just created his account !"
+		author_id: 0
+		receiver_id: 0
+	}
+	app.broadcast(message, user)
+	return "", account
 }

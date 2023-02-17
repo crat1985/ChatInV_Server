@@ -2,11 +2,14 @@ module utils
 
 import net
 import time
+import libsodium
 
 pub struct User {
 	net.TcpConn
 	pub mut:
-		username string
+	username string
+	box libsodium.Box
+	session_key []u8
 }
 
 

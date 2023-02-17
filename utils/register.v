@@ -70,6 +70,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		author_id: 0
 		receiver_id: 0
 	}
+	account = app.get_account_by_pseudo(account.username)
 	app.broadcast(message, user)
 	return "", account
 }

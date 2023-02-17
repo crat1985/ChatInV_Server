@@ -50,7 +50,13 @@ pub fn handle_user(mut user utils.User, mut app utils.App) {
 
 	user.username = account.username
 
-	app.users.insert(app.users.len,  user)
+	app.users << user
+
+	messages := app.get_messages_by_receiver_id(0)
+
+	for message in messages {
+		user.send_message(message, false, mut app)
+	}
 
 	mut message := utils.Message{
 		message: "${account.username} joined the chat !"

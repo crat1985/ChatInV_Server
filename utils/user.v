@@ -1,7 +1,6 @@
 module utils
 
 import net
-import db.sqlite
 
 pub struct User {
 	net.TcpConn
@@ -37,7 +36,7 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	insert_message(message, app.messages_db)
 	for mut user in app.users {
 		if ignore!=user {
-			if user.send_message(message, true, app.messages_db) {
+			if user.send_message(message, false, mut app) {
 				app.disconnected(user)
 			}
 		}
@@ -45,11 +44,16 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	println("[LOG] ${message.message}")
 }
 
-pub fn (mut user User) send_message(message Message, is_broadcast bool, db sqlite.DB) bool {
-	if !is_broadcast {
-		insert_message(message, db)
+pub fn (mut user User) send_message(message Message, save_to_db bool, mut app App) bool {
+	if save_to_db {
+		insert_message(message, app.messages_db)
 	}
-	user.write_string("${message.message.len:05}${message.message}") or {
+	mut text_to_send := ""
+	if message.author_id > 0 {
+		text_to_send += "${app.get_account_by_id(message.author_id).username}> "
+	}
+	text_to_send+=message.message
+	user.write_string("${text_to_send.len:05}$text_to_send") or {
 		return true
 	}
 	return false

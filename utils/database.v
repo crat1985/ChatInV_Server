@@ -34,6 +34,12 @@ pub fn (mut app App) get_messages_by_author_id(author_id int) []Message {
 	}
 }
 
+pub fn (mut app App) get_messages_by_receiver_id(receiver_id int) []Message {
+	return sql app.messages_db {
+		select from Message where receiver_id == receiver_id
+	}
+}
+
 pub fn (mut app App) get_all_messages() []Message {
 	return sql app.messages_db {
 		select from Message
@@ -78,6 +84,12 @@ pub fn (mut app App) get_number_of_accounts() int {
 pub fn (mut app App) get_account_by_pseudo(username string) Account {
 	return sql app.accounts_db {
 		select from Account where username == username limit 1
+	}
+}
+
+pub fn (mut app App) get_account_by_id(id int) Account {
+	return sql app.accounts_db {
+		select from Account where id == id limit 1
 	}
 }
 

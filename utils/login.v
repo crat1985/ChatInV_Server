@@ -11,7 +11,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 				author_id: 0
 				receiver_id: -1
 			}
-			if user.send_message(message, false, app.messages_db) {
+			if user.send_message(message, true, mut app) {
 				return "Error while sending already connected !", Account{}
 			}
 			return "Already connected", Account{}
@@ -21,7 +21,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 			author_id: 0
 			receiver_id: account.id
 		}
-		if user.send_message(message, false, app.messages_db) {
+		if user.send_message(message, true, mut app) {
 			return "Error while sending welcome", Account{}
 		}
 		return "", account
@@ -33,7 +33,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 		author_id: 0
 		receiver_id: -1
 	}
-	if user.send_message(message, false, app.messages_db) {
+	if user.send_message(message, true, mut app) {
 		return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", Account{}
 	}
 	return "Wrong password !", Account{}

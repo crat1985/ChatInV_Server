@@ -65,7 +65,7 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 					author_id: 0
 					receiver_id: -1
 				}
-				if user.send_message(message, false, app.messages_db) {
+				if user.send_message(message, true, mut app) {
 					return "Failed to send \"the server is private ! Cannot create an account !\"", Account{}
 				}
 				return "The server is private ! Cannot create an account !", Account{}

@@ -28,7 +28,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			author_id: 0
 			receiver_id: -1
 		}
-		if user.send_message(message, false, app.messages_db) {
+		if user.send_message(message, true, mut app) {
 			return "Error while sending username or password too short !", Account{}
 		}
 		return "Username or password too short !", Account{}
@@ -39,7 +39,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			author_id: 0
 			receiver_id: -1
 		}
-		if user.send_message(message, false, app.messages_db) {
+		if user.send_message(message, true, mut app) {
 			return "Error while sending account with same username already exists !", Account{}
 		}
 		return "Account with same username already exists !", Account{}
@@ -56,7 +56,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		author_id: 0
 		receiver_id: account.id
 	}
-	if user.send_message(message, false, app.messages_db) {
+	if user.send_message(message, true, mut app) {
 		return "Error while sending welcome", Account{}
 	}
 	message = Message{
@@ -64,7 +64,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		author_id: 0
 		receiver_id: account.id
 	}
-	user.send_message(message, false, app.messages_db)
+	user.send_message(message, true, mut app)
 	message = Message{
 		message: "$username just created his account !"
 		author_id: 0

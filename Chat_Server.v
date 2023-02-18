@@ -63,7 +63,7 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 	}
 	user.box = libsodium.new_box(app.private_key, public_key)
 
-	user.session_key = rand.ascii(256).bytes()
+	user.session_key = rand.ascii(32).bytes()
 
 	user.write(user.box.encrypt(user.session_key)) or {
 		eprintln("[ERROR] Failed to send session key")
@@ -84,8 +84,6 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 
 	user.username = account.username
 
-	app.users << user
-
 	mut messages := app.get_messages_by_receiver_id(0)
 
 	if messages.len > 50 {
@@ -104,6 +102,8 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 		receiver_id: 0
 		timestamp: time.now().microsecond
 	}
+
+	app.users << user
 
 	app.broadcast(message, &utils.User{})
 	for {

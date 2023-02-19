@@ -44,6 +44,7 @@ fn main() {
 			username: ''
 			box: libsodium.Box{}
 			session_key: []
+			secret_box: libsodium.SecretBox{}
 			sock: socket.sock
 		}
 		spawn handle_user(mut user, mut &app)
@@ -61,20 +62,16 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 		eprintln("[ERROR] Failed to receive public key")
 		return
 	}
-	user.box = libsodium.new_box(app.private_key, public_key)
+	box := libsodium.new_box(app.private_key, public_key)
 
 	user.session_key = rand.ascii(32).bytes()
 
-	user.write(user.box.encrypt(user.session_key)) or {
+	user.write(box.encrypt(user.session_key)) or {
 		eprintln("[ERROR] Failed to send session key")
 		return
 	}
 
 	println(user.session_key.bytestr())
-
-	if true {
-		return
-	}
 
 	error, account := app.ask_credentials(mut user)
 	if error!="" {

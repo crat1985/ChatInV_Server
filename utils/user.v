@@ -10,6 +10,7 @@ pub struct User {
 	username string
 	box libsodium.Box
 	session_key []u8
+	secret_box libsodium.SecretBox
 }
 
 

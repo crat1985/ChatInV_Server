@@ -9,8 +9,6 @@ pub struct User {
 	pub mut:
 	username string
 	box libsodium.Box
-	session_key []u8
-	secret_box libsodium.SecretBox
 }
 
 
@@ -44,7 +42,7 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	insert_message(message, app.messages_db)
 	for mut user in app.users {
 		if ignore!=user {
-			if user.send_message(message, false, mut app) {
+			if user.send_encrypted_message(message, false, mut app) {
 				app.disconnected(user)
 			}
 		}
@@ -52,7 +50,7 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	println("[LOG] ${message.message}")
 }
 
-pub fn (mut user User) send_message(message Message, save_to_db bool, mut app App) bool {
+pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, mut app App) bool {
 	if save_to_db {
 		insert_message(message, app.messages_db)
 	}
@@ -61,7 +59,7 @@ pub fn (mut user User) send_message(message Message, save_to_db bool, mut app Ap
 		text_to_send += "${app.get_account_by_id(message.author_id).username}> "
 	}
 	text_to_send+=message.message
-	user.write_string("${text_to_send.len:05}$text_to_send") or {
+	user.write(user.encrypt_string("${text_to_send.len:05}$text_to_send")) or {
 		return true
 	}
 	return false

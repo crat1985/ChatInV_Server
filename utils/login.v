@@ -5,7 +5,7 @@ import time
 
 fn (mut app App) login(mut user &User, username string, password string) (string, Account) {
 	account := app.get_account_by_pseudo(username)
-	if sha256.hexhash(account.salt+password) == account.password {
+	if sha256.hexhash(account.salt+sha256.hexhash(password)) == account.password {
 		if app.is_pseudo_connected(username) {
 			message := Message{
 				message: "1Already connected !"
@@ -13,7 +13,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 				receiver_id: -1
 				timestamp: time.now().microsecond
 			}
-			if user.send_message(message, true, mut app) {
+			if user.send_encrypted_message(message, false, mut app) {
 				return "Error while sending already connected !", Account{}
 			}
 			return "Already connected", Account{}
@@ -24,7 +24,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 			receiver_id: account.id
 			timestamp: time.now().microsecond
 		}
-		if user.send_message(message, true, mut app) {
+		if user.send_encrypted_message(message, false, mut app) {
 			return "Error while sending welcome", Account{}
 		}
 		return "", account
@@ -37,7 +37,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 		receiver_id: -1
 		timestamp: time.now().microsecond
 	}
-	if user.send_message(message, true, mut app) {
+	if user.send_encrypted_message(message, false, mut app) {
 		return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", Account{}
 	}
 	return "Wrong password !", Account{}

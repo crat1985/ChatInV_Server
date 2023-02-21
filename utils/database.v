@@ -17,8 +17,6 @@ pub struct Message {
 	pub mut:
 	id int [primary; sql: serial]
 	message string [nonnull]
-	// Going to be added in the future
-	// iv []u8 [nonnull]
 	author_id int [nonnull]
 	receiver_id int [nonnull]
 	timestamp int [nonnull]

@@ -9,11 +9,13 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 		return "Cannot read credentials", Account{}
 	}
 	//removing null bytes
-	data = data#[..data_length]
+	data = data[..data_length]
 	if data.len == 0 {
 		return "Bad credentials 0", Account{}
 	}
-	mut credentials_string := data.bytestr()
+	mut credentials_string := user.decrypt_string(data) or {
+		return "Cannot decrypt credentials", Account{}
+	}
 	//getting mode
 	credentials_string_length := credentials_string#[..5].int()
 	if credentials_string_length == 0 {
@@ -51,12 +53,20 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 		return "Credentials too short !", Account{}
 	}
 	//getting password
-	password := credentials_string#[..64]
+	password_length := credentials_string#[..2].int()
+	if password_length == 0 {
+		return "Bad password length !", Account{}
+	}
+	credentials_string = credentials_string#[2..]
+	if credentials_string.len == 0 {
+		return "Credentials too short !", Account{}
+	}
+	password := credentials_string#[..password_length]
 	if password.len == 0 {
 		return "Password too short !", Account{}
 	}
-	if credentials_string.len > 64 {
-		eprintln("[LOG] More characters than expected, message : `${credentials_string[64..]}`")
+	if credentials_string.len > password_length {
+		eprintln("[LOG] More characters than expected, message : `${credentials_string[password_length..]}`")
 	}
 	match mode {
 		"l" { return app.login(mut user, username, password) }
@@ -68,7 +78,7 @@ pub fn (mut app App) ask_credentials(mut user &User) (string, Account) {
 					receiver_id: -1
 					timestamp: time.now().microsecond
 				}
-				if user.send_message(message, true, mut app) {
+				if user.send_encrypted_message(message, false, mut app) {
 					return "Failed to send \"the server is private ! Cannot create an account !\"", Account{}
 				}
 				return "The server is private ! Cannot create an account !", Account{}

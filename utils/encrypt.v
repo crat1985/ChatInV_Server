@@ -1,25 +1,23 @@
 module utils
 
-import libsodium
-
-fn (mut app App) encrypt(data []u8) []u8 {
-	return app.secret_box.encrypt(data)
+pub fn (mut user User) encrypt(data []u8) []u8 {
+	return user.box.encrypt(data)
 }
 
-fn (mut app App) encrypt_string(text string) []u8 {
-	return app.secret_box.encrypt_string(text)
+pub fn (mut user User) encrypt_string(text string) []u8 {
+	return user.box.encrypt_string(text)
 }
 
-fn (mut app App) decrypt(data []u8) ![]u8 {
-	decrypted := app.secret_box.decrypt(data)
+pub fn (mut user User) decrypt(data []u8) ![]u8 {
+	decrypted := user.box.decrypt(data)
 	if decrypted.hex().is_blank() {
 		return error('Failed to decrypt data')
 	}
 	return decrypted
 }
 
-fn (mut app App) decrypt_string(data []u8) !string {
-	decrypted := app.secret_box.decrypt_string(data)
+pub fn (mut user User) decrypt_string(data []u8) !string {
+	decrypted := user.box.decrypt_string(data)
 	if decrypted.is_blank() {
 		return error('Failed to decrypt data')
 	}

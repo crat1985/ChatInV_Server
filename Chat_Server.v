@@ -6,7 +6,6 @@ import time
 import os
 import db.sqlite
 import libsodium
-import rand
 
 fn main() {
 	mut app := utils.App{
@@ -43,8 +42,6 @@ fn main() {
 		mut user := &utils.User{
 			username: ''
 			box: libsodium.Box{}
-			session_key: []
-			secret_box: libsodium.SecretBox{}
 			sock: socket.sock
 		}
 		spawn handle_user(mut user, mut &app)
@@ -54,27 +51,26 @@ fn main() {
 
 pub fn handle_user(mut user utils.User, mut app &utils.App) {
 	user.write(app.private_key.public_key) or {
-		eprintln("[ERROR] Failed to send public key")
+		dump("[ERROR] Failed to send public key")
 		return
 	}
+
 	mut public_key := []u8{len: 32}
 	user.read(mut public_key) or {
-		eprintln("[ERROR] Failed to receive public key")
-		return
-	}
-	box := libsodium.new_box(app.private_key, public_key)
-
-	user.session_key = rand.ascii(32).bytes()
-
-	user.write(box.encrypt(user.session_key)) or {
-		eprintln("[ERROR] Failed to send session key")
+		dump("[ERROR] Failed to receive public key")
 		return
 	}
 
-	println(user.session_key.bytestr())
+	user.box = libsodium.new_box(app.private_key, public_key)
 
 	error, account := app.ask_credentials(mut user)
 	if error!="" {
+		user.send_encrypted_message(utils.Message{
+			message: "1$error"
+			author_id: 0
+			receiver_id: -1
+			timestamp: time.now().microsecond
+		}, false, mut app)
 		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
 		return
 	}
@@ -88,13 +84,11 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 	}
 
 	for message in messages {
-		user.send_message(message, false, mut app)
+		user.send_encrypted_message(message, false, mut app)
 	}
 
 	mut message := utils.Message{
 		message: "${account.username} joined the chat !"
-		// Going to be added in the future
-		// iv: rand.ascii(16).bytes()
 		author_id: 0
 		receiver_id: 0
 		timestamp: time.now().microsecond
@@ -110,8 +104,10 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 			app.disconnected(user)
 			break
 		}
-		datas = datas[0..length]
-		mut string_data := datas.bytestr()
+		datas = datas[..length]
+		mut string_data := user.decrypt_string(datas) or {
+			continue
+		}
 		length = string_data[..5].int()
 		if string_data.len < 6 {
 			eprintln("${account.username} sent an invalid message : $string_data")

@@ -9,6 +9,7 @@ pub struct User {
 	pub mut:
 	username string
 	box libsodium.Box
+	ip string
 }
 
 

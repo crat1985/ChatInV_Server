@@ -4,24 +4,24 @@ import rand
 import crypto.sha256
 import time
 
-fn (mut app App) register(mut user &User, username string, password string) (string, Account) {
+fn (mut app App) register(mut user &User, username string, password string) !Account {
 	if username.contains(" ") || username.contains("\t") || username.contains("\n") {
-		return "Pseudo cannot contains spaces !", Account{}
+		return error("Pseudo cannot contains spaces !")
 	}
-	mut error := false
+	mut pseudo_error := false
 	for index, c in username {
 		if index == 0 {
 			if !c.is_letter() {
-				error = true
+				pseudo_error = true
 				break
 			}
 		} else if !c.is_alnum() && c.ascii_str() != '_' {
-			error = true
+			pseudo_error = true
 			break
 		}
 	}
-	if error {
-		return "Pseudo must begin with a letter and must contains only letters, numbers and underscores !", Account{}
+	if pseudo_error {
+		return error("Pseudo must begin with a letter and must contains only letters, numbers and underscores !")
 	}
 	if username.len < 3 || password.len < 8 {
 		message := Message{
@@ -31,9 +31,9 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			timestamp: time.now().microsecond
 		}
 		if user.send_encrypted_message(message, false, mut app) {
-			return "Error while sending username or password too short !", Account{}
+			return error("Error while sending username or password too short !")
 		}
-		return "Username or password too short !", Account{}
+		return error("Username or password too short !")
 	}
 	if app.account_exists(username) {
 		message := Message{
@@ -43,9 +43,9 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 			timestamp: time.now().microsecond
 		}
 		if user.send_encrypted_message(message, false, mut app) {
-			return "Error while sending account with same username already exists !", Account{}
+			return error("Error while sending account with same username already exists !")
 		}
-		return "Account with same username already exists !", Account{}
+		return error("Account with same username already exists !")
 	}
 	mut account := Account{
 		username: username
@@ -62,7 +62,7 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 		timestamp: time.now().microsecond
 	}
 	if user.send_encrypted_message(message, false, mut app) {
-		return "Error while sending welcome", Account{}
+		return error("Error while sending welcome")
 	}
 	message = Message{
 		message: "Welcome $username !"
@@ -79,5 +79,5 @@ fn (mut app App) register(mut user &User, username string, password string) (str
 	}
 	account = app.get_account_by_pseudo(account.username)
 	app.broadcast(message, user)
-	return "", account
+	return account
 }

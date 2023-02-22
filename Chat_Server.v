@@ -43,6 +43,7 @@ fn main() {
 			username: ''
 			box: libsodium.Box{}
 			sock: socket.sock
+			ip: socket.peer_ip() or {continue}
 		}
 		spawn handle_user(mut user, mut &app)
 	}
@@ -63,15 +64,14 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 
 	user.box = libsodium.new_box(app.private_key, public_key)
 
-	error, account := app.ask_credentials(mut user)
-	if error!="" {
+	account := app.ask_credentials(mut user) or {
 		user.send_encrypted_message(utils.Message{
-			message: "1$error"
+			message: "1$err"
 			author_id: 0
 			receiver_id: -1
 			timestamp: time.now().microsecond
 		}, false, mut app)
-		println("[LOG] ${user.peer_ip() or {"IPERROR"}} => '$error'")
+		eprintln("[LOG] ${user.ip} => '$err'")
 		return
 	}
 

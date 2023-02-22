@@ -3,7 +3,7 @@ module utils
 import crypto.sha256
 import time
 
-fn (mut app App) login(mut user &User, username string, password string) (string, Account) {
+fn (mut app App) login(mut user &User, username string, password string) !Account {
 	account := app.get_account_by_pseudo(username)
 	if sha256.hexhash(account.salt+sha256.hexhash(password)) == account.password {
 		if app.is_pseudo_connected(username) {
@@ -14,9 +14,9 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 				timestamp: time.now().microsecond
 			}
 			if user.send_encrypted_message(message, false, mut app) {
-				return "Error while sending already connected !", Account{}
+				return error("Error while sending already connected !")
 			}
-			return "Already connected", Account{}
+			return error("Already connected")
 		}
 		message := Message{
 			message: "0Welcome $username !"
@@ -25,12 +25,11 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 			timestamp: time.now().microsecond
 		}
 		if user.send_encrypted_message(message, false, mut app) {
-			return "Error while sending welcome", Account{}
+			return error("Error while sending welcome")
 		}
-		return "", account
+		return account
 	}
 
-	println("[LOG] ${user.peer_ip() or {"IPERROR"}} => 'Wrong password !'")
 	message := Message{
 		message: "1Wrong password !"
 		author_id: 0
@@ -38,7 +37,7 @@ fn (mut app App) login(mut user &User, username string, password string) (string
 		timestamp: time.now().microsecond
 	}
 	if user.send_encrypted_message(message, false, mut app) {
-		return "Error while sending 'Wrong password' to ${user.peer_ip() or {"IPERROR"}}", Account{}
+		return error("Error while sending 'Wrong password' !")
 	}
-	return "Wrong password !", Account{}
+	return error("Wrong password !")
 }

@@ -67,7 +67,7 @@ pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, 
 }
 
 pub fn (mut user User) send_encrypted_message_with_unknown_receiver_id(message string, mut app App) !bool {
-	app.send_encrypted_message(Message{
+	user.send_encrypted_message(Message{
 		message: message
 		author_id: 0
 		receiver_id: -1

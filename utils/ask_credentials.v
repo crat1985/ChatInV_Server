@@ -1,7 +1,5 @@
 module utils
 
-import time
-
 pub fn (mut app App) ask_credentials(mut user &User) !Account {
 	mut data := []u8{len: 1024}
 	data_length := user.read(mut data) or {

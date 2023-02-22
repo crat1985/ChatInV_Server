@@ -2,9 +2,11 @@ module main
 
 import net
 import os
-import crypto.sha256
+import libsodium
 
 fn main() {
+	private_key := libsodium.new_private_key()
+
 	mut addr := os.input("Address (localhost): ")
 	if addr.is_blank() {
 		addr = "localhost"
@@ -14,9 +16,6 @@ fn main() {
 		port = "8888"
 	}
 
-	mut connection := net.dial_tcp("$addr:$port") or {
-		panic(err)
-	}
 	mut pseudo := ""
 	for {
 		pseudo = os.input("Pseudo : ")
@@ -43,23 +42,49 @@ fn main() {
 		break
 	}
 
-	password = sha256.hexhash(password)
+	mut connection := net.dial_tcp("$addr:$port") or {
+		panic(err)
+	}
 
-	send_message(mut connection, "l${pseudo.len:02}$pseudo$password")
+	mut public_key := []u8{len: 1024}
+	mut length := connection.read(mut public_key) or {
+		panic(err)
+	}
+	public_key = public_key[..length]
+
+	connection.write(private_key.public_key) or {
+		panic(err)
+	}
+
+	box := libsodium.new_box(private_key, public_key)
+
+	send_encrypted_message(mut connection, "l${pseudo.len:02}$pseudo${password.len:02}$password", box)
 
 	mut data := []u8{len: 1024}
-	length := connection.read(mut data) or {
+	length = connection.read(mut data) or {
 		eprintln(err.msg())
 		return
 	}
 
-	show_message(data[..length].bytestr(), true)
+	show_message(decrypt_string(mut data[..length], box) or { panic(err) }, true)
 }
 
-fn send_message(mut socket &net.TcpConn, data string) {
-	socket.write_string("${data.len:05}$data") or {
+fn send_encrypted_message(mut socket &net.TcpConn, data string, box libsodium.Box) {
+	socket.write(encrypt_string("${data.len:05}$data", box)) or {
 		panic(err)
 	}
+}
+
+fn encrypt_string(text string, box libsodium.Box) []u8 {
+	return box.encrypt_string(text)
+}
+
+fn decrypt_string(mut data []u8, box libsodium.Box) !string {
+	decrypted := box.decrypt_string(data)
+	if decrypted.is_blank() {
+		return error("Error while decrypting data")
+	}
+	return decrypted
 }
 
 fn show_message(data string, check0or1 bool) {
@@ -96,7 +121,7 @@ fn show_message(data string, check0or1 bool) {
 		println(msg[..length])
 	}
 
-	if msg.len == length {
+	if msg.len <= length {
 		return
 	}
 

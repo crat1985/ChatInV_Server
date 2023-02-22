@@ -71,15 +71,6 @@ pub fn (mut app App) ask_credentials(mut user &User) !Account {
 		"l" { return app.login(mut user, username, password) }
 		"r" {
 			$if private ? {
-				message := Message{
-					message: "1The server is private ! Cannot create an account !"
-					author_id: 0
-					receiver_id: -1
-					timestamp: time.now().microsecond
-				}
-				user.send_encrypted_message(message, false, mut app) or {
-					return error("Failed to send \"the server is private ! Cannot create an account !\"")
-				}
 				return error("The server is private ! Cannot create an account !")
 			}
 			$else { return app.register(mut user,  username, password) }

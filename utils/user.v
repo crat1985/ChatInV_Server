@@ -65,3 +65,15 @@ pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, 
 	}
 	return true
 }
+
+pub fn (mut user User) send_encrypted_message_with_unknown_receiver_id(message string, mut app App) !bool {
+	app.send_encrypted_message(Message{
+		message: message
+		author_id: 0
+		receiver_id: -1
+		timestamp: time.now().microsecond
+	}, false, mut app) or {
+		return error("Error while sending message")
+	}
+	return true
+}

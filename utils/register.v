@@ -24,27 +24,9 @@ fn (mut app App) register(mut user &User, username string, password string) !Acc
 		return error("Pseudo must begin with a letter and must contains only letters, numbers and underscores !")
 	}
 	if username.len < 3 || password.len < 8 {
-		message := Message{
-			message: "1Username or password too short !"
-			author_id: 0
-			receiver_id: -1
-			timestamp: time.now().microsecond
-		}
-		user.send_encrypted_message(message, false, mut app) or {
-			return error("Error while sending username or password too short !")
-		}
 		return error("Username or password too short !")
 	}
 	if app.account_exists(username) {
-		message := Message{
-			message: "1Account with same username already exists !"
-			author_id: 0
-			receiver_id: -1
-			timestamp: time.now().microsecond
-		}
-		user.send_encrypted_message(message, false, mut app) or {
-			return error("Error while sending account with same username already exists !")
-		}
 		return error("Account with same username already exists !")
 	}
 	mut account := Account{

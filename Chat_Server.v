@@ -65,12 +65,7 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 	user.box = libsodium.new_box(app.private_key, public_key)
 
 	account := app.ask_credentials(mut user) or {
-		user.send_encrypted_message(utils.Message{
-			message: "1$err"
-			author_id: 0
-			receiver_id: -1
-			timestamp: time.now().microsecond
-		}, false, mut app) or {}
+		user.send_encrypted_message_with_unknown_receiver_id("1$err", mut app) or {}
 		eprintln("[LOG] ${user.ip} => '$err'")
 		return
 	}

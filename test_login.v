@@ -4,45 +4,62 @@ import net
 import os
 import libsodium
 
+struct App {
+mut:
+	private_key libsodium.PrivateKey
+	addr string
+	port string
+	pseudo string
+	password string
+	connection net.TcpConn
+	box libsodium.Box
+}
+
 fn main() {
-	private_key := libsodium.new_private_key()
-
-	mut addr := os.input("Address (localhost): ")
-	if addr.is_blank() {
-		addr = "localhost"
+	mut app := App{
+		private_key: libsodium.new_private_key()
+		addr: "localhost"
+		port: "8888"
+		pseudo: ""
+		password: ""
+		connection: net.TcpConn{}
+		box: libsodium.Box{}
 	}
-	mut port := os.input("Port (8888): ")
-	if port.is_blank() {
-		port = "8888"
+
+	app.addr = os.input("Address (localhost): ")
+	if app.addr.is_blank() {
+		app.addr = "localhost"
+	}
+	app.port = os.input("Port (8888): ")
+	if app.port.is_blank() {
+		app.port = "8888"
 	}
 
-	mut pseudo := ""
 	for {
-		pseudo = os.input("Pseudo : ")
-		if pseudo.is_blank() {
+		app.pseudo = os.input("Pseudo : ")
+		if app.pseudo.is_blank() {
 			continue
 		}
-		if pseudo.trim_space().len < 3 {
+		if app.pseudo.trim_space().len < 3 {
 			println("The pseudo must be at least 3 characters long !")
 			continue
 		}
 		break
 	}
 
-	mut password := ""
 	for {
-		password = os.input_password("Password : ")!
-		if password.is_blank() {
+		app.password = os.input_password("Password : ")!
+		if app.password.is_blank() {
 			continue
 		}
-		if password.len < 8 {
+		if app.password.len < 8 {
 			println("The password must be at least 8 characters long !")
 			continue
 		}
 		break
 	}
 
-	mut connection := net.dial_tcp("$addr:$port") or {
+	app.connection = net.dial_tcp("${app.addr}:${app.port}") or {
 		panic(err)
 	}
 
@@ -52,13 +69,13 @@ fn main() {
 	}
 	public_key = public_key[..length]
 
-	connection.write(private_key.public_key) or {
+	app.connection.write(private_key.public_key) or {
 		panic(err)
 	}
 
-	box := libsodium.new_box(private_key, public_key)
+	app.box = libsodium.new_box(app.private_key, public_key)
 
-	send_encrypted_message(mut connection, "l${pseudo.len:02}$pseudo${password.len:02}$password", box)
+	app.send_encrypted_message(mut connection, "l${pseudo.len:02}$pseudo${password.len:02}$password", app.box)
 
 	mut data := []u8{len: 1024}
 	length = connection.read(mut data) or {
@@ -66,20 +83,20 @@ fn main() {
 		return
 	}
 
-	show_message(decrypt_string(mut data[..length], box) or { panic(err) }, true)
+	show_message(app.decrypt_string(data[..length]) or { panic(err) }, true)
 }
 
-fn send_encrypted_message(mut socket &net.TcpConn, data string, box libsodium.Box) {
+fn (mut app App) send_encrypted_message(mut socket &net.TcpConn, data string) {
 	socket.write(encrypt_string("${data.len:05}$data", box)) or {
 		panic(err)
 	}
 }
 
-fn encrypt_string(text string, box libsodium.Box) []u8 {
+fn (mut app App) encrypt_string(text string) []u8 {
 	return box.encrypt_string(text)
 }
 
-fn decrypt_string(mut data []u8, box libsodium.Box) !string {
+fn (mut app App) decrypt_string(data []u8) !string {
 	decrypted := box.decrypt_string(data)
 	if decrypted.is_blank() {
 		return error("Error while decrypting data")

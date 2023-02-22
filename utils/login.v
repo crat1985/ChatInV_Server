@@ -13,7 +13,7 @@ fn (mut app App) login(mut user &User, username string, password string) !Accoun
 				receiver_id: -1
 				timestamp: time.now().microsecond
 			}
-			if user.send_encrypted_message(message, false, mut app) {
+			user.send_encrypted_message(message, false, mut app) or {
 				return error("Error while sending already connected !")
 			}
 			return error("Already connected")
@@ -24,7 +24,7 @@ fn (mut app App) login(mut user &User, username string, password string) !Accoun
 			receiver_id: account.id
 			timestamp: time.now().microsecond
 		}
-		if user.send_encrypted_message(message, false, mut app) {
+		user.send_encrypted_message(message, false, mut app) or {
 			return error("Error while sending welcome")
 		}
 		return account
@@ -36,7 +36,7 @@ fn (mut app App) login(mut user &User, username string, password string) !Accoun
 		receiver_id: -1
 		timestamp: time.now().microsecond
 	}
-	if user.send_encrypted_message(message, false, mut app) {
+	user.send_encrypted_message(message, false, mut app) or {
 		return error("Error while sending 'Wrong password' !")
 	}
 	return error("Wrong password !")

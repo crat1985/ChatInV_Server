@@ -77,7 +77,7 @@ pub fn (mut app App) ask_credentials(mut user &User) !Account {
 					receiver_id: -1
 					timestamp: time.now().microsecond
 				}
-				if user.send_encrypted_message(message, false, mut app) {
+				user.send_encrypted_message(message, false, mut app) or {
 					return error("Failed to send \"the server is private ! Cannot create an account !\"")
 				}
 				return error("The server is private ! Cannot create an account !")

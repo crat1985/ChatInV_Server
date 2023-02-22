@@ -70,7 +70,7 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 			author_id: 0
 			receiver_id: -1
 			timestamp: time.now().microsecond
-		}, false, mut app)
+		}, false, mut app) or {}
 		eprintln("[LOG] ${user.ip} => '$err'")
 		return
 	}
@@ -84,7 +84,9 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 	}
 
 	for message in messages {
-		user.send_encrypted_message(message, false, mut app)
+		user.send_encrypted_message(message, false, mut app) or {
+			eprintln("[ERROR] Failed to send message to ${user.username}")
+		}
 	}
 
 	mut message := utils.Message{

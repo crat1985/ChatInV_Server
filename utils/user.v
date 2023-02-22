@@ -43,7 +43,7 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	insert_message(message, app.messages_db)
 	for mut user in app.users {
 		if ignore!=user {
-			if user.send_encrypted_message(message, false, mut app) {
+			user.send_encrypted_message(message, false, mut app) or {
 				app.disconnected(user)
 			}
 		}
@@ -51,7 +51,7 @@ pub fn (mut app App) broadcast(message Message, ignore &User) {
 	println("[LOG] ${message.message}")
 }
 
-pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, mut app App) bool {
+pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, mut app App) !bool {
 	if save_to_db {
 		insert_message(message, app.messages_db)
 	}
@@ -61,7 +61,7 @@ pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, 
 	}
 	text_to_send+=message.message
 	user.write(user.encrypt_string("${text_to_send.len:05}$text_to_send")) or {
-		return true
+		return error("Error while sending message")
 	}
-	return false
+	return true
 }

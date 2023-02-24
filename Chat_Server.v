@@ -30,7 +30,7 @@ fn main() {
 
 	app.server.set_accept_timeout(time.infinite)
 
-	println("Server started on port ${app.port}")
+	println("[LOG] Server started on port ${app.port}")
 
 	for {
 		mut socket := app.server.accept() or {

@@ -60,8 +60,11 @@ pub fn (mut user User) send_encrypted_message(message Message, save_to_db bool, 
 		text_to_send += "${app.get_account_by_id(message.author_id).username}> "
 	}
 	text_to_send+=message.message
-	user.write(user.encrypt_string("${text_to_send.len:05}$text_to_send")) or {
-		return error("Error while sending message")
+	encrypted := user.encrypt_string(text_to_send)
+	mut all_data := "${encrypted.len:05}".bytes()
+	all_data << encrypted
+	user.write(all_data) or {
+		return error("Error while sending message : $err")
 	}
 	return true
 }

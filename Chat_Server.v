@@ -72,12 +72,17 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 
 	user.username = account.username
 
+	//getting messages
 	mut messages := app.get_messages_by_receiver_id(0)
 
 	if messages.len > 50 {
 		messages = messages[messages.len-50..]
 	}
 
+	println(messages)
+	println(messages.len)
+
+	//sending old messages
 	for message in messages {
 		user.send_encrypted_message(message, false, mut app) or {
 			eprintln("[ERROR] Failed to send message to ${user.username}")

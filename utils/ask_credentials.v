@@ -7,25 +7,26 @@ pub fn (mut app App) ask_credentials(mut user &User) !Account {
 	}
 	//removing null bytes
 	data = data[..data_length]
-	if data.len == 0 {
-		return error("Bad credentials 0")
-	}
-	mut credentials_string := user.decrypt_string(data) or {
-		return error("Cannot decrypt credentials")
-	}
-	//getting mode
-	credentials_string_length := credentials_string#[..5].int()
+	//getting length
+	credentials_string_length := data#[..5].bytestr().int()
 	if credentials_string_length == 0 {
 		return error("Bad credentials length !")
 	}
-	credentials_string = credentials_string#[5..]
-	if credentials_string.len == 0 {
+	data = data#[5..]
+	if data.len == 0 {
 		return error("Credentials too short !")
 	}
-	credentials_string = credentials_string#[..credentials_string_length]
-	if credentials_string.len <= 1 {
-		return error("Bad credentials 3 !")
+	println(data)
+	mut credentials_string := user.decrypt_string(data) or {
+		return error("Cannot decrypt credentials")
 	}
+
+	println(credentials_string)
+	
+	if credentials_string.len <= 1 {
+		return error("Bad credentials !")
+	}
+	//getting mode
 	mode := credentials_string[0].ascii_str()
 	credentials_string = credentials_string#[1..]
 	if credentials_string.len == 0 {

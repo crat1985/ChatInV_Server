@@ -16,7 +16,6 @@ pub fn (mut app App) ask_credentials(mut user &User) !Account {
 	if data.len == 0 {
 		return error("Credentials too short !")
 	}
-	println(data)
 	mut credentials_string := user.decrypt_string(data) or {
 		return error("Cannot decrypt credentials")
 	}

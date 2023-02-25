@@ -79,9 +79,6 @@ pub fn handle_user(mut user utils.User, mut app &utils.App) {
 		messages = messages[messages.len-50..]
 	}
 
-	println(messages)
-	println(messages.len)
-
 	//sending old messages
 	for message in messages {
 		user.send_encrypted_message(message, false, mut app) or {

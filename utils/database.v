@@ -4,22 +4,22 @@ import db.sqlite
 
 [table: 'account']
 pub struct Account {
-	pub mut:
-	id int [primary; sql: serial]
+pub mut:
+	id       int    [primary; sql: serial]
 	username string [nonnull]
 	password string [nonnull]
-	salt string [nonnull]
-	created int [nonnull]
+	salt     string [nonnull]
+	created  int    [nonnull]
 }
 
 [table: 'message']
 pub struct Message {
-	pub mut:
-	id int [primary; sql: serial]
-	message string [nonnull]
-	author_id int [nonnull]
-	receiver_id int [nonnull]
-	timestamp int [nonnull]
+pub mut:
+	id          int    [primary; sql: serial]
+	message     string [nonnull]
+	author_id   int    [nonnull]
+	receiver_id int    [nonnull]
+	timestamp   i64    [nonnull]
 }
 
 pub fn insert_message(message Message, db sqlite.DB) {
@@ -52,13 +52,9 @@ pub fn (mut app App) get_message_by_id(id int) Message {
 	}
 }
 
-pub fn (mut app App) init_databases() {
-	app.accounts_db = sqlite.connect("accounts.db") or {
-		panic(err)
-	}
-	app.messages_db = sqlite.connect("messages.db") or {
-		panic(err)
-	}
+pub fn (mut app App) init_databases() ! {
+	app.accounts_db = sqlite.connect('accounts.db') or { return err }
+	app.messages_db = sqlite.connect('messages.db') or { return err }
 
 	sql app.accounts_db {
 		create table Account
@@ -93,10 +89,9 @@ pub fn (mut app App) get_account_by_id(id int) Account {
 	}
 }
 
-pub fn (mut app App) insert_account(account Account) {
+pub fn (mut app App) insert_account(account Account) ! {
 	if app.account_exists(account.username) {
-		println("ALREADY EXISTS")
-		return
+		return error('ALREADY EXISTS')
 	}
 	sql app.accounts_db {
 		insert account into Account

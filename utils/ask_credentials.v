@@ -2,7 +2,7 @@ module utils
 
 pub fn (mut app App) ask_credentials(mut user User) !Account {
 	mut data := []u8{len: 1024}
-	data_length := user.read(mut data) or { return error('Cannot read credentials') }
+	data_length := user.conn.read(mut data) or { return error('Cannot read credentials') }
 	// removing null bytes
 	data = data[..data_length]
 	// getting length
@@ -17,8 +17,6 @@ pub fn (mut app App) ask_credentials(mut user User) !Account {
 	mut credentials_string := user.decrypt_string(data) or {
 		return error('Cannot decrypt credentials')
 	}
-
-	println(credentials_string)
 
 	if credentials_string.len <= 1 {
 		return error('Bad credentials !')

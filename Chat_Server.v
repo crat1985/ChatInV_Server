@@ -8,7 +8,7 @@ import db.sqlite
 import libsodium
 
 fn main() {
-	mut app := utils.App{
+	mut app := &utils.App{
 		users: []utils.User{}
 		private_key: libsodium.new_private_key()
 		accounts_db: sqlite.DB{}
@@ -17,14 +17,17 @@ fn main() {
 		server: 0
 	}
 
-	app.init_databases() or { panic(err) }
+	app.init_databases() or { println('Error while initializing databases : ${err}') }
 
 	mut port := os.input('Port (default: 8888) : ')
 	if !port.is_blank() {
 		app.port = port
 	}
 
-	app.server = net.listen_tcp(.ip6, ':${app.port}') or { panic(err) }
+	app.server = net.listen_tcp(.ip6, ':${app.port}') or {
+		dump('Error while listening on port ${app.port} : ${err}')
+		return
+	}
 
 	app.server.set_accept_timeout(time.infinite)
 
@@ -38,14 +41,18 @@ fn main() {
 		socket.set_read_timeout(time.infinite)
 		socket.set_write_timeout(time.infinite)
 		mut user := &utils.User{
-			ip: socket.peer_ip() or { continue }
+			conn: socket
+			ip: socket.peer_ip() or {
+				eprintln('[ERROR] Invalid user IP')
+				continue
+			}
 		}
-		spawn handle_user(mut user, mut &app)
+		spawn handle_user(mut user, mut app)
 	}
 }
 
 fn handle_user(mut user utils.User, mut app utils.App) {
-	user.box = user.setup_encryption(app.private_key) or {
+	user.setup_encryption(app.private_key) or {
 		eprintln(err)
 		return
 	}
@@ -83,22 +90,25 @@ fn handle_user(mut user utils.User, mut app utils.App) {
 
 	app.broadcast(message, &utils.User{})
 	for {
-		mut datas := []u8{len: 1024}
-		mut length := user.read(mut datas) or {
+		mut data := []u8{len: 1024}
+		mut length := user.conn.read(mut data) or {
 			eprintln('[ERROR] ' + err.str())
 			app.disconnected(user)
 			break
 		}
-		datas = datas[..length]
-		mut string_data := user.decrypt_string(datas) or { continue }
-		length = string_data[..5].int()
-		if string_data.len < 6 {
-			eprintln('${account.username} sent an invalid message : ${string_data}')
+		data = data[..length]
+		message_length := data#[..5].bytestr().int()
+		if message_length == 0 {
+			eprintln('${account.username} sent an invalid message : ${data}')
 			continue
 		}
-		string_data = string_data[5..]
-		if string_data.len < length {
-			eprintln('${account.username} sent an invalid message : ${string_data}')
+		data = data[5..]
+		if data.len < message_length {
+			eprintln('${account.username} sent an invalid message : ${data}')
+			continue
+		}
+		mut string_data := user.decrypt_string(data) or {
+			eprintln('[ERROR] Cannot decrypt message from ${user.username} !')
 			continue
 		}
 		message = utils.Message{

@@ -17,7 +17,7 @@ fn main() {
 		server: 0
 	}
 
-	app.init_databases() or { println('Error while initializing databases : ${err}') }
+	app.init_databases() or { panic('Error while initializing databases : ${err}') }
 
 	mut port := os.input('Port (default: 8888) : ')
 	if !port.is_blank() {
@@ -25,8 +25,7 @@ fn main() {
 	}
 
 	app.server = net.listen_tcp(.ip6, ':${app.port}') or {
-		dump('Error while listening on port ${app.port} : ${err}')
-		return
+		panic('Error while listening on port ${app.port} : ${err}')
 	}
 
 	app.server.set_accept_timeout(time.infinite)
@@ -35,7 +34,7 @@ fn main() {
 
 	for {
 		mut socket := app.server.accept() or {
-			eprintln(err)
+			dump(err)
 			continue
 		}
 		socket.set_read_timeout(time.infinite)
